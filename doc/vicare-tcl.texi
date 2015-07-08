@@ -1,0 +1,677 @@
+\input texinfo.tex
+@c %**start of header
+@setfilename vicare-tcl.info
+@settitle Tcl for Vicare
+@c %**end of header
+
+@include version.texi
+@include macros.texi
+
+@c page
+@c ------------------------------------------------------------
+@c Values.
+@c ------------------------------------------------------------
+
+@set TITLE                      Tcl for Vicare
+
+@c To be used as @value{PACKAGE} whenever we need to include the full
+@c name of this package.
+@set PACKAGE                    Vicare/@tcl{}
+
+@c To be used as @value{PACKAGE} whenever we need to include the
+@c nickname of the project: the name that is used to compose the
+@c distribution tarball or the web address.
+@set PACKAGE_NICKNAME           vicare-tcl
+
+@c To be used as @value{AUTHOR} whenever we need to include the list of
+@c authors of this document.
+@set AUTHOR                     Marco Maggi
+
+@c To be used as @value{AUTHOR_EMAIL} whenever we need to include the
+@c email of the *single* author of this document.
+@set AUTHOR_EMAIL               @email{marco.maggi.ipsu@@poste.it}
+
+@c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
+@c list of copyright years.
+@set COPYRIGHT_YEARS            2015
+
+@c ------------------------------------------------------------
+
+@set FOREIGN_PACKAGE            @tcl{}
+@set FOREIGN_VERSION            8.6.1
+@set FOREIGN_URL                @url{http:/@//@/core.tcl.tk/}
+@set FOREIGN_SCHEME_LIB         @library{vicare languages tcl}
+@set NAUSICAA_SCHEME_LIB        @library{nausicaa languages tcl}
+@set GITHUB_URL                 @url{http:/@//@/github.com/@/marcomaggi/@/@value{PACKAGE_NICKNAME}}
+@set BITBUCKET_URL              @url{https:/@//@/bitbucket.org/@/marcomaggi/@/@value{PACKAGE_NICKNAME}}
+@set DOWNLOAD_URL               @url{https:/@//@/bitbucket.org/@/marcomaggi/@/@value{PACKAGE_NICKNAME}/@/downloads}
+@set DOCUMENTATION_URL          @url{http:/@//@/marcomaggi.github.io/@/docs/@/@value{PACKAGE_NICKNAME}.html}
+@set VICARE_HOMEPAGE_URL        @url{http:/@//@/marcomaggi.github.io/@/vicare.html}
+
+@macro tclman{NODE, TITLE}
+@xref{\NODE\,\TITLE\,\TITLE\,*manpages*}
+@end macro
+
+@macro tcl{}
+@acronym{TCL}
+@end macro
+
+@macro tk{}
+@acronym{TK}
+@end macro
+
+@c page
+@c ------------------------------------------------------------
+@c Copyright notice.
+@c ------------------------------------------------------------
+
+@copying
+This document describes version @version{} of @value{PACKAGE}, a
+distribution of C and Scheme libraries for Vicare Scheme, an @rnrs{6}
+compliant Scheme implementation; it provides bindings for the
+@value{FOREIGN_PACKAGE} C language library.
+
+The package is distributed under the terms of the @gnu{} General Public
+License (@gpl{}) and can be downloaded from:
+
+@center @value{DOWNLOAD_URL}
+
+@noindent
+development takes place at:
+
+@center @value{GITHUB_URL}
+
+@noindent
+and as backup at:
+
+@center @value{BITBUCKET_URL}
+
+@noindent
+@value{FOREIGN_PACKAGE} is available at:
+
+@center @value{FOREIGN_URL}
+
+@noindent
+Copyright @copyright{} @value{COPYRIGHT_YEARS} by @value{AUTHOR} @value{AUTHOR_EMAIL}
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the @gnu{} Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with
+Invariant Sections being ``@gnu{} Free Documentation License'' and
+``@gnu{} General Public License'', no Front--Cover Texts, and no
+Back--Cover Texts.  A copy of the license is included in the section
+entitled ``@gnu{} Free Documentation License''.
+@end quotation
+@end copying
+
+@c page
+@c ------------------------------------------------------------
+@c Headers.
+@c ------------------------------------------------------------
+
+@titlepage
+@title @value{TITLE}
+@subtitle Revision @version{}
+@author @value{AUTHOR} @value{AUTHOR_EMAIL}
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@c ------------------------------------------------------------
+
+@ifinfo
+@dircategory Development
+@direntry
+* vicare-tcl: (vicare-tcl).     @value{TITLE}.
+@end direntry
+@end ifinfo
+
+@c ------------------------------------------------------------
+
+@ignore
+@syncodeindex tp cp
+@syncodeindex vr cp
+@syncodeindex fn cp
+@end ignore
+
+@c page
+@ifnottex
+@node Top
+@top @value{TITLE}
+
+@insertcopying
+
+@menu
+* overview::                    Overview of the package.
+* plain::                       Plain programming interface.
+@c * nau::                         Nausicaa programming interface.
+
+Appendices
+
+* Package License::             GNU General Public License.
+* Documentation License::       GNU Free Documentation License.
+* references::                  Bibliography and references.
+
+Indexes
+
+* concept index::               An entry for each concept.
+* function index::              An entry for each function.
+* variable index::              An entry for each variable.
+* type index::                  An entry for each type.
+@end menu
+@end ifnottex
+
+@c page
+@node overview
+@chapter Overview of the package
+
+
+Vicare Scheme is an @rnrs{6} compliant Scheme language implementation in
+the form of a native compiler for x86 architectures, officially
+supporting @gnu{}+Linux systems.  @value{PACKAGE} is a distribution of C
+language and Scheme language libraries for Vicare Scheme; it provides
+bindings for the @value{FOREIGN_PACKAGE} C language library.
+
+The last time the author bothered to update this paragraph, he had
+tested @value{FOREIGN_PACKAGE} version @value{FOREIGN_VERSION}; the
+@value{FOREIGN_PACKAGE} library is available at:
+
+@center @value{FOREIGN_URL}
+
+The package installs a C language library implementing wrapper C
+functions for the C language @value{FOREIGN_PACKAGE} library; on top of
+this, the Scheme library @value{FOREIGN_SCHEME_LIB} exports one binding
+for each @value{FOREIGN_PACKAGE} public function; additionally the
+library @library{vicare languages tcl constants} exports one binding
+for each constant value defined in the C language header
+@file{tcl.h}.
+
+The following Scheme libraries are installed:
+
+@table @asis
+@item @library{vicare languages tcl}
+@cindex Library @library{vicare languages tcl}
+@cindex @library{vicare languages tcl}, library
+It exports one binding for each @value{FOREIGN_PACKAGE} public function.
+All the Scheme function names are directly derived from the C function
+names by replacing underscore characters @samp{_} with dash characters
+@samp{-}; so @cfunc{tcl_doit} becomes @func{tcl-doit}.
+
+@item @library{vicare languages tcl unsafe-capi}
+@cindex Library @library{vicare languages tcl unsafe-capi}
+@cindex @library{vicare languages tcl unsafe-capi}, library
+It exports one syntax binding for each @value{FOREIGN_PACKAGE} public
+function.  All the Scheme syntax names are directly derived from the C
+function names by replacing underscore characters @samp{_} with dash
+characters @samp{-}; so @cfunc{tcl_doit} becomes
+@func{tcl-doit}.
+
+These syntaxes expand to a direct call to the C language wrapper
+functions in the @value{PACKAGE} library; they are not meant to be
+called in normal usage of the package.
+
+@item @library{vicare languages tcl constants}
+@cindex Library @library{vicare languages tcl constants}
+@cindex @library{vicare languages tcl constants}, library
+It exports one binding for each constant value defined in the C language
+header @file{tcl.h}.
+
+@item @library{vicare languages tcl features}
+@cindex Library @library{vicare languages tcl features}
+@cindex @library{vicare languages tcl features}, library
+It exports one identifier syntax binding for each @code{HAVE_} constant
+defined by the @command{configure} script, expanding to @true{} or
+@false{}.
+
+@item @library{nausicaa languages tcl}
+@cindex Library @library{nausicaa languages tcl}
+@cindex @library{nausicaa languages tcl}, library
+An @oopp{} @api{} built on top of the @library{nausicaa} language and
+the library @library{vicare languages tcl}.
+@end table
+
+Scheme libraries are installed under the directory:
+
+@center @file{$(libdir)/vicare-scheme}
+
+This document contains only a brief description of the functions: refer
+to the @value{FOREIGN_PACKAGE}'s documentation for details.
+
+@c page
+@node plain
+@chapter Plain programming interface
+
+
+@cindex Library @value{FOREIGN_SCHEME_LIB}
+@cindex @value{FOREIGN_SCHEME_LIB}, library
+
+
+The library @value{FOREIGN_SCHEME_LIB} implements the high level @api{}
+for @value{FOREIGN_PACKAGE}.
+
+@menu
+* plain version::               @value{PACKAGE} version informations.
+* plain alpha::                 Alpha objects.
+* plain misc::                  Miscellaneous operations.
+@end menu
+
+@c page
+@node plain version
+@section @value{PACKAGE} version informations
+
+
+The installed C library follows version numbering as established by the
+@gnu{} Autotools.  For an explanation of interface numbers as managed by
+@gnu{} Libtool @xref{Libtool versioning, interface, Libtool's versioning
+system, libtool, Shared library support for @gnu{}}.
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@defun vicare-tcl-version-interface-current
+@defunx vicare-tcl-version-interface-revision
+@defunx vicare-tcl-version-interface-age
+Return a fixnum representing a version number.
+@end defun
+
+
+@defun vicare-tcl-version
+Return a Scheme string representing the version number.
+@end defun
+
+@c page
+@node plain alpha
+@section Alpha objects
+
+
+@menu
+* plain alpha struct::          Alpha data structure.
+* plain alpha ops::             Operating on alpha objects.
+@end menu
+
+@c page
+@node plain alpha struct
+@subsection Alpha data structure
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@deftp {Struct Type} tcl-alpha
+@cindex Argument @var{alpha}
+@cindex @var{alpha} argument
+Opaque structure type referencing an instance of the C language type
+@code{tcl_alpha}.  When instances of this type are used as
+arguments to functions: this documentation identifies them as
+@var{alpha}.
+
+Instances of this type must be finalised with
+@func{tcl-alpha-finalise}; whenever an instance of this type is
+garbage collected: @func{tcl-alpha-finalise} is automatically
+applied to it and any error ignored.
+
+In certain contexts, instances of this type own the referenced
+@code{tcl_alpha} value, in other contexts they do not:
+
+@itemize
+@item
+Finalising a @objtype{tcl-alpha} instance owning the
+@code{tcl_alpha} value, causes finalisation of the
+@code{tcl_alpha} value too.
+
+@item
+Finalising a @objtype{tcl-alpha} instance @strong{not} owning the
+@code{tcl_alpha} value, leaves the @code{tcl_alpha} untouched.
+@end itemize
+
+@noindent
+this should happen transparently.
+@end deftp
+
+
+@defun tcl-alpha? @var{obj}
+Return @true{} if @var{obj} is an instance of @objtype{tcl-alpha};
+otherwise return @false{}.
+@end defun
+
+
+@defun tcl-alpha?/alive @var{obj}
+Return @true{} if @var{obj} is an instance of @objtype{tcl-alpha} and it
+has not been finalised; return @false{} otherwise.
+@end defun
+
+@c ------------------------------------------------------------
+
+@subsubheading Object properties
+
+
+@defun tcl-alpha-putprop @var{alpha} @var{key} @var{value}
+Add a new property @var{key} to the property list of @var{alpha};
+@var{key} must be a symbol.  If @var{key} is already set: the old entry
+is mutated to reference the new @var{value}.
+@end defun
+
+
+@defun tcl-alpha-getprop @var{alpha} @var{key}
+Return the value of the property @var{key} in the property list of
+@var{alpha}; if @var{key} is not set: return @false{}.  @var{key} must
+be a symbol.
+@end defun
+
+
+@defun tcl-alpha-remprop @var{alpha} @var{key}
+Remove the property @var{key} from the property list of @var{alpha}; if
+@var{key} is not set: nothing happens.  @var{key} must be a symbol.
+@end defun
+
+
+@defun tcl-alpha-property-list @var{alpha}
+Return a new association list representing the property list of
+@var{alpha}.  The order of the entries is the same as the property
+creation order.
+@end defun
+
+@c ------------------------------------------------------------
+
+@subsubheading Custom destructor
+
+
+@defun alpha-custom-destructor @var{alpha}
+@defunx set-alpha-custom-destructor! @var{alpha} @var{func}
+Retrieve or set a destructor function associated to @var{alpha}.
+
+Whenever @var{alpha} is finalised, either explicitly with
+@func{tcl-alpha-finalise} or implicitly by the garbage collector,
+@var{func} is applied to @var{alpha} before the internal state of
+@var{alpha} is destroyed.
+@end defun
+
+@c ------------------------------------------------------------
+
+@subsubheading Other operations
+
+
+@defun tcl-alpha-hash @var{alpha}
+Return an exact integer to be used as hashtable key for @var{alpha}.
+Hashtables having a @objtype{tcl-alpha} as key can be instantiated
+as follows:
+
+@example
+(make-hashtable tcl-alpha-hash eq?)
+@end example
+@end defun
+
+@c page
+@node plain alpha ops
+@subsection Operating on alpha objects
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@defun tcl-alpha-initialise
+Build and return a new @objtype{tcl-alpha} object; if an error
+occurs raise an exception.
+@end defun
+
+
+@defun tcl-alpha-finalise @var{alpha}
+Finalise @var{alpha}; return unspecified values.  It is fine to apply
+this function multiple times to the same @var{alpha} value: the first
+time the underlying data is finalised, the subsequent times nothing
+happens.
+
+If this function is applied to an @var{alpha} value not owning the
+underlying @code{tcl_alpha} value: @var{alpha} is finalised, but
+the @code{tcl_alpha} value is left alone.
+@end defun
+
+@c page
+@node plain misc
+@section Miscellaneous operations
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@c page
+@ignore
+
+@node nau
+@chapter Nausicaa programming interface
+
+
+@cindex Library @value{NAUSICAA_SCHEME_LIB}
+@cindex @value{NAUSICAA_SCHEME_LIB}, library
+
+
+The library @value{NAUSICAA_SCHEME_LIB} implements an interface to
+@value{FOREIGN_SCHEME_LIB} on top of the @library{nausicaa} language.
+
+@menu
+* nau intro::                   Introduction to the Nausicaa @api{}.
+* nau alpha::                   Alpha objects handling.
+@end menu
+
+@c page
+@node nau intro
+@section Introduction to the Nausicaa @api{}
+
+
+The library @value{NAUSICAA_SCHEME_LIB} reexports the following bindings
+from @value{FOREIGN_SCHEME_LIB}:
+
+@example
+vicare-tcl-version-interface-current
+vicare-tcl-version-interface-revision
+vicare-tcl-version-interface-age
+vicare-tcl-version
+@end example
+
+@c page
+@node nau alpha
+@section Alpha objects handling
+
+
+@menu
+* nau alpha objects::           Alpha objects.
+* nau alpha methods::           Alpha methods.
+@end menu
+
+@c page
+@node nau alpha objects
+@subsection Alpha objects
+
+
+The following bindings are exported by the library
+@value{NAUSICAA_SCHEME_LIB}.
+
+
+@deftp {Label Type} @aclass{tcl-alpha}
+@cindex Argument @var{alpha}
+@cindex @var{alpha} argument
+Label type representing objects of type @objtype{tcl-alpha}.  When
+instances of this type are used as arguments to functions: this
+documentation identifies them as @var{alpha}.
+
+Instances of this type must be finalised calling the method
+@func{finalise}; whenever an instance of this type is garbage collected:
+@func{finalise} is automatically applied to it and any error ignored.
+@end deftp
+
+
+@defop {Default constructor} @aclass{tcl-alpha} constructor
+Build and return a new @class{tcl-alpha} object; if an error occurs
+raise an exception.
+@end defop
+
+
+@defop {Maker syntax} @aclass{tcl-alpha} @aclass{tcl-alpha} ()
+Build and return a new @class{tcl-alpha} using the default
+constructor.
+@end defop
+
+
+@defmethod @aclass{tcl-alpha} finalise
+Finalise the instance; return unspecified values.  It is fine to call
+this method multiple times for the same instance.
+@end defmethod
+
+
+@deftypemethod @aclass{tcl-alpha} @aclass{boolean} alive?
+Return @true{} if @var{obj} is an instance of @class{tcl-alpha} and it
+has not been finalised; return @false{} otherwise.
+@end deftypemethod
+
+
+@c ------------------------------------------------------------
+
+@subsubheading Object properties
+
+
+@defmethod @aclass{tcl-alpha} putprop @var{key} @var{value}
+Add a new property @var{key} to the property list of the instance;
+@var{key} must be a symbol.  If @var{key} is already set: the old entry
+is mutated to reference the new @var{value}.
+@end defmethod
+
+
+@defmethod @aclass{tcl-alpha} getprop @var{key}
+Return the value of the property @var{key} in the property list of the
+instance; if @var{key} is not set: return @false{}.  @var{key} must be a
+symbol.
+@end defmethod
+
+
+@defmethod @aclass{tcl-alpha} remprop @var{key}
+Remove the property @var{key} from the property list of the instance; if
+@var{key} is not set: nothing happens.  @var{key} must be a symbol.
+@end defmethod
+
+
+@defmethod @aclass{tcl-alpha} property-list
+Return a new association list representing the property list of the
+instance.  The order of the entries is the same as the property creation
+order.
+@end defmethod
+
+@c ------------------------------------------------------------
+
+@subsubheading Virtual fields
+
+
+@deftypecv {Mutable virtual field} @aclass{tcl-alpha} @aclass{procedure} destructor
+Retrieve or set a destructor function associated to the instance.
+
+Whenever the instance is finalised, either explicitly with
+@func{finalise} or implicitly by the garbage collector, the custom
+destructor is applied to the instance before the internal state of the
+instance is destroyed.
+@end deftypecv
+
+@c ------------------------------------------------------------
+
+@subsubheading Other operations
+
+
+@defmethod @aclass{tcl-alpha} hash
+Return an exact integer to be used as hashtable key for the instance.
+Hashtables having a @class{tcl-alpha} as key can be instantiated as
+follows:
+
+@example
+(make-hashtable (lambda ((V <tcl-alpha>))
+                  (V hash))
+                eq?)
+@end example
+@end defmethod
+
+@c page
+@node nau alpha methods
+@subsection Alpha methods
+
+
+The following bindings are exported by the library
+@value{NAUSICAA_SCHEME_LIB}.
+
+
+@c @defmethod @aclass{tcl-alpha} name
+@c Return a Scheme string representing the name of the given instance.
+@c @end defmethod
+
+@end ignore
+
+@c page
+@c ------------------------------------------------------------
+@c Appendices.
+@c ------------------------------------------------------------
+
+@include gpl-3.0.texi
+@include fdl-1.3.texi
+
+@c page
+@node references
+@appendix Bibliography and references
+
+
+The documentation of @value{PACKAGE} is available online:
+
+@center @value{DOCUMENTATION_URL}
+
+@noindent
+the latest version of this package can be downloaded from:
+
+@center @value{DOWNLOAD_URL}
+
+@noindent
+development takes place at:
+
+@center @value{GITHUB_URL}
+
+@noindent
+and as backup at:
+
+@center @value{BITBUCKET_URL}
+
+@noindent
+the home page of the Vicare project is at:
+
+@center @value{VICARE_HOMEPAGE_URL}
+
+@noindent
+@value{FOREIGN_PACKAGE} can be found here:
+
+@center @value{FOREIGN_URL}
+
+@c page
+@node concept index
+@appendix An entry for each concept
+
+@printindex cp
+
+@node function index
+@appendix An entry for each function.
+
+@printindex fn
+
+@node variable index
+@appendix An entry for each variable.
+
+@printindex vr
+
+@node type index
+@appendix An entry for each type.
+
+@printindex tp
+
+@contents
+@bye
+
+@c end of file
+

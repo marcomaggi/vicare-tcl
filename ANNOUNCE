@@ -1,0 +1,49 @@
+Subject: [announce] Vicare/Tcl revision 0.4d0
+
+			       Vicare/Tcl
+			       ==========
+
+
+This package  is a  distribution of  C and  Scheme libraries  for Vicare
+Scheme, an R6RS compliant Scheme implementation  in the form of a native
+compiler for x86 architectures, officially supporting GNU+Linux systems;
+it provides bindings for the Tcl C language library.
+
+  This package makes use of the GNU Autotools.
+
+  The latest version of this package can be downloaded from:
+
+	<https://bitbucket.org/marcomaggi/vicare-tcl/downloads>
+
+the home page of the Vicare project is at:
+
+	       <http://marcomaggi.github.io/vicare.html>
+
+development takes place at:
+
+	       <http://github.com/marcomaggi/vicare-tcl/>
+
+and as backup at:
+
+      <https://bitbucket.org/marcomaggi/vicare-tcl/downloads>
+
+  The last  time the author  bothered to  update this paragraph,  he had
+tested Tcl version 8.6.1; the Tcl library is available at:
+
+			 <http://core.tcl.tk/>
+
+
+Notes for revision 0.4d0
+------------------------
+
+* The major and minor version numbers  of this package match the ones of
+  the required Vicare Scheme package.
+
+
+
+### end of file
+# Local Variables:
+# mode: text
+# fill-column: 72
+# paragraph-start: "*"
+# End:
