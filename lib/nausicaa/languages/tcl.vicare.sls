@@ -37,35 +37,35 @@
     vicare-tcl-version
 
     ;; label
-    <tcl-alpha>
+    <tcl-interp>
     )
   (import (nausicaa)
     (vicare languages tcl))
 
 
-;;;; label wrapper for struct "tcl-alpha"
+;;;; label wrapper for struct "tcl-interp"
 
-(define-label <tcl-alpha>
-  (predicate tcl-alpha?)
-  (protocol (lambda () tcl-alpha-initialise))
+(define-label <tcl-interp>
+  (predicate tcl-interp?)
+  (protocol (lambda () tcl-interp-initialise))
 
 ;;; common objects stuff
 
   (virtual-fields
    (mutable {destructor <procedure>}
-	    tcl-alpha-custom-destructor
-	    set-tcl-alpha-custom-destructor!))
+	    tcl-interp-custom-destructor
+	    set-tcl-interp-custom-destructor!))
 
   (methods
-   (alive?		tcl-alpha?/alive)
-   (finalise		tcl-alpha-finalise)
+   (alive?		tcl-interp?/alive)
+   (finalise		tcl-interp-finalise)
 
-   (putprop		tcl-alpha-putprop)
-   (getprop		tcl-alpha-getprop)
-   (remprop		tcl-alpha-remprop)
-   (property-list	tcl-alpha-property-list)
+   (putprop		tcl-interp-putprop)
+   (getprop		tcl-interp-getprop)
+   (remprop		tcl-interp-remprop)
+   (property-list	tcl-interp-property-list)
 
-   (hash		tcl-alpha-hash))
+   (hash		tcl-interp-hash))
 
 ;;;
 
@@ -74,6 +74,6 @@
 
 ;;;; done
 
-)
+#| end of library |# )
 
 ;;; end of file

@@ -32,47 +32,68 @@
 
 
 /** --------------------------------------------------------------------
- ** Alpha struct.
+ ** Interp struct.
  ** ----------------------------------------------------------------- */
 
-#define HAVE_TCL_ALPHA_INITIALISE		1
-#define HAVE_TCL_ALPHA_FINALISE		1
-
-typedef struct tcl_alpha_tag_t {
-  int	num;
-} tcl_alpha_t;
-
-
-ikptr_t
-ikrt_tcl_alpha_initialise (ikpcb_t * pcb)
+static int
+ik_tcl_interp_finalise (Tcl_Interp * interp)
 {
-#ifdef HAVE_TCL_ALPHA_INITIALISE
-  tcl_alpha_t *	rv;
-  rv = malloc(sizeof(tcl_alpha_t));
-  if (NULL != rv) {
-    rv->num = 123;
-    return ika_pointer_alloc(pcb, (ik_ulong)rv);
-  } else
+  if (0)
+    ik_debug_message("%s: finalising interp %p", __func__, (void*)interp);
+  if (! Tcl_InterpDeleted(interp)) {
+    Tcl_DeleteInterp(interp);
+  }
+  return TCL_OK;
+}
+ikptr_t
+ikrt_tcl_interp_initialise (ikpcb_t * pcb)
+{
+#if ((defined HAVE_TCL_CREATEINTERP) && (defined HAVE_TCL_INIT) && \
+     (defined HAVE_TCL_PRESERVE) && (defined HAVE_TCL_SETVAR) && \
+     (defined HAVE_TCL_EVAL))
+  Tcl_Interp *	interp = Tcl_CreateInterp();
+  if (TCL_OK == Tcl_Init(interp)) {
+    /* Implement reference counting for the  interp.  The interp is kept
+       alive until "Tcl_Release()" is applied to the pointer. */
+    Tcl_Preserve(interp);
+    /* We want  the interp  to see  the commands  coming from  Vicare as
+       non-interactive. */
+    Tcl_SetVar(interp, "tcl_interactive", "0", TCL_GLOBAL_ONLY);
+    /* Remove the [exit] command from  the Tcl interp, because it causes
+       the whole process to terminate. */
+    Tcl_Eval(interp, "rename exit \"\"");
+    /* If, in future, we want to add  some Tcl command, we have to do it
+       here. */
+#if 0
+    Tcl_CreateObjCommand(interp, "vicare", vicare_command, NULL, NULL);
+#endif
+    return ika_pointer_alloc(pcb, (ikuword_t)interp);
+  } else {
     return IK_FALSE;
+  }
 #else
   feature_failure(__func__);
 #endif
 }
 ikptr_t
-ikrt_tcl_alpha_finalise (ikptr_t s_alpha, ikpcb_t * pcb)
+ikrt_tcl_interp_finalise (ikptr_t s_interp, ikpcb_t * pcb)
 {
-#ifdef HAVE_TCL_ALPHA_FINALISE
-  ikptr_t		s_pointer	= IK_TCL_ALPHA_POINTER(s_alpha);
+#if ((defined HAVE_TCL_RELEASE) && (defined HAVE_TCL_INTERPDELETED) && (defined HAVE_TCL_DELETEINTERP))
+  ikptr_t		s_pointer	= IK_TCL_INTERP_POINTER(s_interp);
   if (ik_is_pointer(s_pointer)) {
-    tcl_alpha_t *	alpha	= IK_POINTER_DATA_VOIDP(s_pointer);
-    int		owner		= IK_BOOLEAN_TO_INT(IK_TCL_ALPHA_OWNER(s_alpha));
-    if (alpha && owner) {
-      free(alpha);
+    Tcl_Interp *	interp	= IK_POINTER_DATA_VOIDP(s_pointer);
+    int			owner	= IK_BOOLEAN_TO_INT(IK_TCL_INTERP_OWNER(s_interp));
+    if (interp && owner) {
+      /* Register the  destruction function to  be used to  finalise the
+	 interp. */
+      Tcl_EventuallyFree(interp, (Tcl_FreeProc*)ik_tcl_interp_finalise);
+      /* Release the interp. */
+      Tcl_Release(interp);
       IK_POINTER_SET_NULL(s_pointer);
     }
   }
-  /* Return false so that the return value of "$tcl-alpha-finalise"
-     is always false. */
+  /* Return false so that the  return value of "$tcl-interp-finalise" is
+     always false. */
   return IK_FALSE;
 #else
   feature_failure(__func__);

@@ -64,7 +64,13 @@ main (int argc, const char *const argv[])
 #!r6rs\n\
 (library (vicare languages tcl features)\n\
   (export\n\
-    HAVE_TCL_OPTION\n\
+    HAVE_TCL_CREATEINTERP\n\
+    HAVE_TCL_DELETEINTERP\n\
+    HAVE_TCL_INIT\n\
+    HAVE_TCL_INTERPDELETED\n\
+    HAVE_TCL_PRESERVE\n\
+    HAVE_TCL_RELEASE\n\
+    HAVE_TCL_SETVAR\n\
     )\n\
   (import (rnrs))\n\
 \n\
@@ -79,8 +85,56 @@ main (int argc, const char *const argv[])
 ;;;; code\n\n");
 
 
-printf("(define-inline-constant HAVE_TCL_OPTION %s)\n",
-#ifdef HAVE_TCL_OPTION
+printf("(define-inline-constant HAVE_TCL_CREATEINTERP %s)\n",
+#ifdef HAVE_TCL_CREATEINTERP
+  "#t"
+#else
+  "#f"
+#endif
+  );
+
+printf("(define-inline-constant HAVE_TCL_DELETEINTERP %s)\n",
+#ifdef HAVE_TCL_DELETEINTERP
+  "#t"
+#else
+  "#f"
+#endif
+  );
+
+printf("(define-inline-constant HAVE_TCL_INIT %s)\n",
+#ifdef HAVE_TCL_INIT
+  "#t"
+#else
+  "#f"
+#endif
+  );
+
+printf("(define-inline-constant HAVE_TCL_INTERPDELETED %s)\n",
+#ifdef HAVE_TCL_INTERPDELETED
+  "#t"
+#else
+  "#f"
+#endif
+  );
+
+printf("(define-inline-constant HAVE_TCL_PRESERVE %s)\n",
+#ifdef HAVE_TCL_PRESERVE
+  "#t"
+#else
+  "#f"
+#endif
+  );
+
+printf("(define-inline-constant HAVE_TCL_RELEASE %s)\n",
+#ifdef HAVE_TCL_RELEASE
+  "#t"
+#else
+  "#f"
+#endif
+  );
+
+printf("(define-inline-constant HAVE_TCL_SETVAR %s)\n",
+#ifdef HAVE_TCL_SETVAR
   "#t"
 #else
   "#f"

@@ -32,7 +32,7 @@
 
 
 /** --------------------------------------------------------------------
- ** Version functions.
+ ** Vicare/TCL version functions.
  ** ----------------------------------------------------------------- */
 
 ikptr_t
@@ -54,6 +54,32 @@ ikptr_t
 ikrt_tcl_version (ikpcb_t * pcb)
 {
   return ika_bytevector_from_cstring(pcb, vicare_tcl_VERSION_INTERFACE_STRING);
+}
+
+
+/** --------------------------------------------------------------------
+ ** Tcl version functions.
+ ** ----------------------------------------------------------------- */
+
+ikptr_t
+ikrt_tcl_major_version (void)
+{
+  return IK_FIX(TCL_MAJOR_VERSION);
+}
+ikptr_t
+ikrt_tcl_minor_version (void)
+{
+  return IK_FIX(TCL_MINOR_VERSION);
+}
+ikptr_t
+ikrt_tcl_release_serial (void)
+{
+  return IK_FIX(TCL_RELEASE_SERIAL);
+}
+ikptr_t
+ikrt_tcl_patch_level (ikpcb_t * pcb)
+{
+  return ika_bytevector_from_cstring(pcb, TCL_PATCH_LEVEL);
 }
 
 /* end of file */

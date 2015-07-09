@@ -61,7 +61,7 @@
   #t)
 
 
-(parametrise ((check-test-name		'struct-alpha)
+(parametrise ((check-test-name		'struct-interp)
 	      (struct-guardian-logger	#t))
 
   (define who 'test)
@@ -69,29 +69,29 @@
 ;;; --------------------------------------------------------------------
 
   (check	;this will be garbage collected
-      (let (({A <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({A <tcl-interp>} (<tcl-interp> ())))
 	;;;(debug-print A)
-	(is-a? A <tcl-alpha>))
+	(is-a? A <tcl-interp>))
     => #t)
 
   (check
-      (let (({A <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({A <tcl-interp>} (<tcl-interp> ())))
 	(A alive?))
     => #t)
 
   (check	;single finalisation
-      (let (({A <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({A <tcl-interp>} (<tcl-interp> ())))
   	(A finalise))
     => #f)
 
   (check	;double finalisation
-      (let (({A <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({A <tcl-interp>} (<tcl-interp> ())))
   	(A finalise)
   	(A finalise))
     => #f)
 
   (check	;alive predicate after finalisation
-      (let (({A <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({A <tcl-interp>} (<tcl-interp> ())))
   	(A finalise)
   	(A alive?))
     => #f)
@@ -101,7 +101,7 @@
 
   (check
       (with-result
-       (let (({A <tcl-alpha>} (<tcl-alpha> ())))
+       (let (({A <tcl-interp>} (<tcl-interp> ())))
 	 (set! (A destructor) (lambda (A)
 				(add-result 123)))
 	 (A finalise)))
@@ -111,13 +111,13 @@
 ;;; hash
 
   (check-for-true
-   (let (({V <tcl-alpha>} (<tcl-alpha> ())))
+   (let (({V <tcl-interp>} (<tcl-interp> ())))
      (integer? (V hash))))
 
   (check
-      (let ((A (<tcl-alpha> ()))
-	    (B (<tcl-alpha> ()))
-	    (T (make-hashtable (lambda ({V <tcl-alpha>})
+      (let ((A (<tcl-interp> ()))
+	    (B (<tcl-interp> ()))
+	    (T (make-hashtable (lambda ({V <tcl-interp>})
 				 (V hash))
 			       eq?)))
 	(hashtable-set! T A 1)
@@ -130,30 +130,30 @@
 ;;; properties
 
   (check
-      (let (({S <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({S <tcl-interp>} (<tcl-interp> ())))
 	(S property-list))
     => '())
 
   (check
-      (let (({S <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({S <tcl-interp>} (<tcl-interp> ())))
 	(S putprop 'ciao 'salut)
 	(S getprop 'ciao))
     => 'salut)
 
   (check
-      (let (({S <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({S <tcl-interp>} (<tcl-interp> ())))
 	(S getprop 'ciao))
     => #f)
 
   (check
-      (let (({S <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({S <tcl-interp>} (<tcl-interp> ())))
 	(S putprop 'ciao 'salut)
 	(S remprop 'ciao)
 	(S getprop 'ciao))
     => #f)
 
   (check
-      (let (({S <tcl-alpha>} (<tcl-alpha> ())))
+      (let (({S <tcl-interp>} (<tcl-interp> ())))
 	(S putprop 'ciao 'salut)
 	(S putprop 'hello 'ohayo)
 	(list (S getprop 'ciao)

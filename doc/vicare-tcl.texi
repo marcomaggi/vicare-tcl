@@ -38,8 +38,8 @@
 @c ------------------------------------------------------------
 
 @set FOREIGN_PACKAGE            @tcl{}
-@set FOREIGN_VERSION            8.6.1
-@set FOREIGN_URL                @url{http:/@//@/core.tcl.tk/}
+@set FOREIGN_VERSION            8.6.4
+@set FOREIGN_URL                @url{http:/@//@/www.tcl.tk/}
 @set FOREIGN_SCHEME_LIB         @library{vicare languages tcl}
 @set NAUSICAA_SCHEME_LIB        @library{nausicaa languages tcl}
 @set GITHUB_URL                 @url{http:/@//@/github.com/@/marcomaggi/@/@value{PACKAGE_NICKNAME}}
@@ -176,17 +176,17 @@ bindings for the @value{FOREIGN_PACKAGE} C language library.
 
 The last time the author bothered to update this paragraph, he had
 tested @value{FOREIGN_PACKAGE} version @value{FOREIGN_VERSION}; the
-@value{FOREIGN_PACKAGE} library is available at:
+@value{FOREIGN_PACKAGE} package is available at:
 
 @center @value{FOREIGN_URL}
 
-The package installs a C language library implementing wrapper C
-functions for the C language @value{FOREIGN_PACKAGE} library; on top of
-this, the Scheme library @value{FOREIGN_SCHEME_LIB} exports one binding
-for each @value{FOREIGN_PACKAGE} public function; additionally the
-library @library{vicare languages tcl constants} exports one binding
-for each constant value defined in the C language header
-@file{tcl.h}.
+The package installs a C language library implementing driver C
+functions for the C language @value{FOREIGN_PACKAGE} library, making
+@tcl{} an embedded language for Vicare Scheme; on top of this, the
+Scheme library @value{FOREIGN_SCHEME_LIB} exports an @api{} that allows
+the evaluation of @tcl{} scripts from Scheme; additionally the library
+@library{vicare languages tcl constants} exports one binding for each
+useful constant value defined in the C language header @file{tcl.h}.
 
 The following Scheme libraries are installed:
 
@@ -194,29 +194,24 @@ The following Scheme libraries are installed:
 @item @library{vicare languages tcl}
 @cindex Library @library{vicare languages tcl}
 @cindex @library{vicare languages tcl}, library
-It exports one binding for each @value{FOREIGN_PACKAGE} public function.
-All the Scheme function names are directly derived from the C function
-names by replacing underscore characters @samp{_} with dash characters
-@samp{-}; so @cfunc{tcl_doit} becomes @func{tcl-doit}.
+It exports an @api{} that allows the evaluation of @tcl{} scripts from
+Scheme.
 
 @item @library{vicare languages tcl unsafe-capi}
 @cindex Library @library{vicare languages tcl unsafe-capi}
 @cindex @library{vicare languages tcl unsafe-capi}, library
-It exports one syntax binding for each @value{FOREIGN_PACKAGE} public
-function.  All the Scheme syntax names are directly derived from the C
-function names by replacing underscore characters @samp{_} with dash
-characters @samp{-}; so @cfunc{tcl_doit} becomes
-@func{tcl-doit}.
+It exports one keyword syntactic binding for each function in the C
+language @api{}.
 
-These syntaxes expand to a direct call to the C language wrapper
+These syntaxes expand to a direct call to the C language interface
 functions in the @value{PACKAGE} library; they are not meant to be
 called in normal usage of the package.
 
 @item @library{vicare languages tcl constants}
 @cindex Library @library{vicare languages tcl constants}
 @cindex @library{vicare languages tcl constants}, library
-It exports one binding for each constant value defined in the C language
-header @file{tcl.h}.
+It exports one binding for each useful constant value defined in the C
+language header @file{tcl.h}.
 
 @item @library{vicare languages tcl features}
 @cindex Library @library{vicare languages tcl features}
@@ -253,7 +248,7 @@ for @value{FOREIGN_PACKAGE}.
 
 @menu
 * plain version::               @value{PACKAGE} version informations.
-* plain alpha::                 Alpha objects.
+* plain interp::                @tcl{} interpreter objects.
 * plain misc::                  Miscellaneous operations.
 @end menu
 
@@ -274,58 +269,80 @@ The following bindings are exported by the library
 @defun vicare-tcl-version-interface-current
 @defunx vicare-tcl-version-interface-revision
 @defunx vicare-tcl-version-interface-age
-Return a fixnum representing a version number.
+Return a fixnum representing a @value{PACKAGE} version number.
 @end defun
 
 
 @defun vicare-tcl-version
-Return a Scheme string representing the version number.
+Return a Scheme string representing the @value{PACKAGE} version number.
+@end defun
+
+
+@defun tcl-major-version
+@defunx tcl-minor-version
+@defunx tcl-release-serial
+Return a fixnum representing a @tcl{} version number.  These numbers are
+the values of the C language preprocessor symbols:
+
+@example
+TCL_MAJOR_VERSION
+TCL_MINOR_VERSION
+TCL_RELEASE_SERIAL
+@end example
+
+@noindent
+defined in the header file @file{tcl.h}.
+@end defun
+
+
+@defun tcl-patch-level
+Return a Scheme string representing the @tcl{} version number.  This
+number is the value of the C language preprocessor symbol
+@code{TCL_PATCH_LEVEL} defined in the header file @file{tcl.h}.
 @end defun
 
 @c page
-@node plain alpha
-@section Alpha objects
+@node plain interp
+@section Interp objects
 
 
 @menu
-* plain alpha struct::          Alpha data structure.
-* plain alpha ops::             Operating on alpha objects.
+* plain interp struct::         Interp data structure.
+* plain interp ops::            Operating on interp objects.
 @end menu
 
 @c page
-@node plain alpha struct
-@subsection Alpha data structure
+@node plain interp struct
+@subsection Interp data structure
 
 
 The following bindings are exported by the library
 @value{FOREIGN_SCHEME_LIB}.
 
 
-@deftp {Struct Type} tcl-alpha
-@cindex Argument @var{alpha}
-@cindex @var{alpha} argument
+@deftp {Struct Type} tcl-interp
+@cindex Argument @var{interp}
+@cindex @var{interp} argument
 Opaque structure type referencing an instance of the C language type
-@code{tcl_alpha}.  When instances of this type are used as
-arguments to functions: this documentation identifies them as
-@var{alpha}.
+@code{Tcl_Interp}.  When instances of this type are used as arguments to
+functions: this documentation identifies them as @var{interp}.
 
 Instances of this type must be finalised with
-@func{tcl-alpha-finalise}; whenever an instance of this type is
-garbage collected: @func{tcl-alpha-finalise} is automatically
-applied to it and any error ignored.
+@func{tcl-interp-finalise}; whenever an instance of this type is garbage
+collected: @func{tcl-interp-finalise} is automatically applied to it and
+any error ignored.
 
 In certain contexts, instances of this type own the referenced
-@code{tcl_alpha} value, in other contexts they do not:
+@code{Tcl_Interp} value, in other contexts they do not:
 
 @itemize
 @item
-Finalising a @objtype{tcl-alpha} instance owning the
-@code{tcl_alpha} value, causes finalisation of the
-@code{tcl_alpha} value too.
+Finalising a @objtype{tcl-interp} instance owning the @code{Tcl_Interp}
+value, causes finalisation of the @code{Tcl_Interp} value too.
 
 @item
-Finalising a @objtype{tcl-alpha} instance @strong{not} owning the
-@code{tcl_alpha} value, leaves the @code{tcl_alpha} untouched.
+Finalising a @objtype{tcl-interp} instance @strong{not} owning the
+@code{Tcl_Interp} value, leaves the @code{Tcl_Interp} untouched.
 @end itemize
 
 @noindent
@@ -333,15 +350,15 @@ this should happen transparently.
 @end deftp
 
 
-@defun tcl-alpha? @var{obj}
-Return @true{} if @var{obj} is an instance of @objtype{tcl-alpha};
+@defun tcl-interp? @var{obj}
+Return @true{} if @var{obj} is an instance of @objtype{tcl-interp};
 otherwise return @false{}.
 @end defun
 
 
-@defun tcl-alpha?/alive @var{obj}
-Return @true{} if @var{obj} is an instance of @objtype{tcl-alpha} and it
-has not been finalised; return @false{} otherwise.
+@defun tcl-interp?/alive @var{obj}
+Return @true{} if @var{obj} is an instance of @objtype{tcl-interp} and
+it has not been finalised; return @false{} otherwise.
 @end defun
 
 @c ------------------------------------------------------------
@@ -349,29 +366,29 @@ has not been finalised; return @false{} otherwise.
 @subsubheading Object properties
 
 
-@defun tcl-alpha-putprop @var{alpha} @var{key} @var{value}
-Add a new property @var{key} to the property list of @var{alpha};
+@defun tcl-interp-putprop @var{interp} @var{key} @var{value}
+Add a new property @var{key} to the property list of @var{interp};
 @var{key} must be a symbol.  If @var{key} is already set: the old entry
 is mutated to reference the new @var{value}.
 @end defun
 
 
-@defun tcl-alpha-getprop @var{alpha} @var{key}
+@defun tcl-interp-getprop @var{interp} @var{key}
 Return the value of the property @var{key} in the property list of
-@var{alpha}; if @var{key} is not set: return @false{}.  @var{key} must
+@var{interp}; if @var{key} is not set: return @false{}.  @var{key} must
 be a symbol.
 @end defun
 
 
-@defun tcl-alpha-remprop @var{alpha} @var{key}
-Remove the property @var{key} from the property list of @var{alpha}; if
+@defun tcl-interp-remprop @var{interp} @var{key}
+Remove the property @var{key} from the property list of @var{interp}; if
 @var{key} is not set: nothing happens.  @var{key} must be a symbol.
 @end defun
 
 
-@defun tcl-alpha-property-list @var{alpha}
+@defun tcl-interp-property-list @var{interp}
 Return a new association list representing the property list of
-@var{alpha}.  The order of the entries is the same as the property
+@var{interp}.  The order of the entries is the same as the property
 creation order.
 @end defun
 
@@ -380,14 +397,14 @@ creation order.
 @subsubheading Custom destructor
 
 
-@defun alpha-custom-destructor @var{alpha}
-@defunx set-alpha-custom-destructor! @var{alpha} @var{func}
-Retrieve or set a destructor function associated to @var{alpha}.
+@defun interp-custom-destructor @var{interp}
+@defunx set-interp-custom-destructor! @var{interp} @var{func}
+Retrieve or set a destructor function associated to @var{interp}.
 
-Whenever @var{alpha} is finalised, either explicitly with
-@func{tcl-alpha-finalise} or implicitly by the garbage collector,
-@var{func} is applied to @var{alpha} before the internal state of
-@var{alpha} is destroyed.
+Whenever @var{interp} is finalised, either explicitly with
+@func{tcl-interp-finalise} or implicitly by the garbage collector,
+@var{func} is applied to @var{interp} before the internal state of
+@var{interp} is destroyed.
 @end defun
 
 @c ------------------------------------------------------------
@@ -395,40 +412,40 @@ Whenever @var{alpha} is finalised, either explicitly with
 @subsubheading Other operations
 
 
-@defun tcl-alpha-hash @var{alpha}
-Return an exact integer to be used as hashtable key for @var{alpha}.
-Hashtables having a @objtype{tcl-alpha} as key can be instantiated
+@defun tcl-interp-hash @var{interp}
+Return an exact integer to be used as hashtable key for @var{interp}.
+Hashtables having a @objtype{tcl-interp} as key can be instantiated
 as follows:
 
 @example
-(make-hashtable tcl-alpha-hash eq?)
+(make-hashtable tcl-interp-hash eq?)
 @end example
 @end defun
 
 @c page
-@node plain alpha ops
-@subsection Operating on alpha objects
+@node plain interp ops
+@subsection Operating on interp objects
 
 
 The following bindings are exported by the library
 @value{FOREIGN_SCHEME_LIB}.
 
 
-@defun tcl-alpha-initialise
-Build and return a new @objtype{tcl-alpha} object; if an error
+@defun tcl-interp-initialise
+Build and return a new @objtype{tcl-interp} object; if an error
 occurs raise an exception.
 @end defun
 
 
-@defun tcl-alpha-finalise @var{alpha}
-Finalise @var{alpha}; return unspecified values.  It is fine to apply
-this function multiple times to the same @var{alpha} value: the first
+@defun tcl-interp-finalise @var{interp}
+Finalise @var{interp}; return unspecified values.  It is fine to apply
+this function multiple times to the same @var{interp} value: the first
 time the underlying data is finalised, the subsequent times nothing
 happens.
 
-If this function is applied to an @var{alpha} value not owning the
-underlying @code{tcl_alpha} value: @var{alpha} is finalised, but
-the @code{tcl_alpha} value is left alone.
+If this function is applied to an @var{interp} value not owning the
+underlying @code{Tcl_Interp} value: @var{interp} is finalised, but the
+@code{Tcl_Interp} value is left alone.
 @end defun
 
 @c page

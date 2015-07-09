@@ -36,15 +36,20 @@
     vicare-tcl-version-interface-age
     vicare-tcl-version
 
-    ;; tcl alpha struct
-    tcl-alpha-initialise
-    tcl-alpha-finalise
-    tcl-alpha?
-    tcl-alpha?/alive		$tcl-alpha-alive?
-    tcl-alpha-custom-destructor	set-tcl-alpha-custom-destructor!
-    tcl-alpha-putprop		tcl-alpha-getprop
-    tcl-alpha-remprop		tcl-alpha-property-list
-    tcl-alpha-hash
+    tcl-major-version
+    tcl-minor-version
+    tcl-release-serial
+    tcl-patch-level
+
+    ;; tcl interp struct
+    tcl-interp-initialise
+    tcl-interp-finalise
+    tcl-interp?
+    tcl-interp?/alive			$tcl-interp-alive?
+    tcl-interp-custom-destructor	set-tcl-interp-custom-destructor!
+    tcl-interp-putprop			tcl-interp-getprop
+    tcl-interp-remprop			tcl-interp-property-list
+    tcl-interp-hash
 
 ;;; --------------------------------------------------------------------
 ;;; still to be implemented
@@ -83,44 +88,49 @@
 (define (vicare-tcl-version)
   (ascii->string (capi.vicare-tcl-version)))
 
-
-;;;; data structures: alpha
+;;; --------------------------------------------------------------------
 
-(ffi.define-foreign-pointer-wrapper tcl-alpha
-  (ffi.foreign-destructor capi.tcl-alpha-finalise)
-  #;(ffi.foreign-destructor #f)
-  (ffi.collector-struct-type #f)
-  (ffi.collected-struct-type tcl-beta))
+(define (tcl-major-version)
+  (capi.tcl-major-version))
+
+(define (tcl-minor-version)
+  (capi.tcl-minor-version))
+
+(define (tcl-release-serial)
+  (capi.tcl-release-serial))
+
+(define (tcl-patch-level)
+  (ascii->string (capi.tcl-patch-level)))
+
+
+;;;; data structures: interp
+
+(ffi.define-foreign-pointer-wrapper tcl-interp
+  (ffi.foreign-destructor capi.tcl-interp-finalise)
+  (ffi.collector-struct-type #f))
 
 (module ()
-  (set-rtd-printer! (type-descriptor tcl-alpha)
+  (set-rtd-printer! (type-descriptor tcl-interp)
     (lambda (S port sub-printer)
       (define-inline (%display thing)
 	(display thing port))
       (define-inline (%write thing)
 	(write thing port))
-      (%display "#[tcl-alpha")
-      (%display " pointer=")	(%display ($tcl-alpha-pointer  S))
+      (%display "#[tcl-interp")
+      (%display " pointer=")	(%display ($tcl-interp-pointer  S))
       (%display "]"))))
 
 ;;; --------------------------------------------------------------------
 
-(define* (tcl-alpha-initialise)
-  (cond ((capi.tcl-alpha-initialise)
+(define* (tcl-interp-initialise)
+  (cond ((capi.tcl-interp-initialise)
 	 => (lambda (rv)
-	      (make-tcl-alpha/owner rv)))
+	      (make-tcl-interp/owner rv)))
 	(else
-	 (error __who__ "unable to create alpha object"))))
+	 (error __who__ "unable to create interp object"))))
 
-(define* (tcl-alpha-finalise {alpha tcl-alpha?})
-  ($tcl-alpha-finalise alpha))
-
-
-;;;; data structures: beta
-
-(ffi.define-foreign-pointer-wrapper tcl-beta
-  (ffi.foreign-destructor #f)
-  (ffi.collector-struct-type tcl-alpha))
+(define* (tcl-interp-finalise {interp tcl-interp?})
+  ($tcl-interp-finalise interp))
 
 
 ;;;; done

@@ -48,6 +48,11 @@
 		       (vicare-tcl-version-interface-age)
 		       (vicare-tcl-version)))
 
+  (%pretty-print (list (tcl-major-version)
+		       (tcl-minor-version)
+		       (tcl-release-serial)
+		       (tcl-patch-level)))
+
   #t)
 
 

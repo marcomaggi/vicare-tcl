@@ -58,39 +58,53 @@
       (string? (vicare-tcl-version))
     => #t)
 
+;;; --------------------------------------------------------------------
+
+  (check-for-true
+   (fixnum? (tcl-major-version)))
+
+  (check-for-true
+   (fixnum? (tcl-minor-version)))
+
+  (check-for-true
+   (fixnum? (tcl-release-serial)))
+
+  (check-for-true
+   (string? (tcl-patch-level)))
+
   #t)
 
 
-(parametrise ((check-test-name		'struct-alpha)
+(parametrise ((check-test-name		'struct-interp)
 	      (struct-guardian-logger	#t))
 
   (define who 'test)
 
   (check	;this will be garbage collected
-      (let ((voice (tcl-alpha-initialise)))
+      (let ((voice (tcl-interp-initialise)))
 ;;;(debug-print voice)
-	(tcl-alpha? voice))
+	(tcl-interp? voice))
     => #t)
 
   (check
-      (tcl-alpha?/alive (tcl-alpha-initialise))
+      (tcl-interp?/alive (tcl-interp-initialise))
     => #t)
 
   (check	;single finalisation
-      (let ((voice (tcl-alpha-initialise)))
-  	(tcl-alpha-finalise voice))
+      (let ((voice (tcl-interp-initialise)))
+  	(tcl-interp-finalise voice))
     => #f)
 
   (check	;double finalisation
-      (let ((voice (tcl-alpha-initialise)))
-  	(tcl-alpha-finalise voice)
-  	(tcl-alpha-finalise voice))
+      (let ((voice (tcl-interp-initialise)))
+  	(tcl-interp-finalise voice)
+  	(tcl-interp-finalise voice))
     => #f)
 
   (check	;alive predicate after finalisation
-      (let ((voice (tcl-alpha-initialise)))
-  	(tcl-alpha-finalise voice)
-  	(tcl-alpha?/alive voice))
+      (let ((voice (tcl-interp-initialise)))
+  	(tcl-interp-finalise voice)
+  	(tcl-interp?/alive voice))
     => #f)
 
 ;;; --------------------------------------------------------------------
@@ -98,22 +112,22 @@
 
   (check
       (with-result
-       (let ((voice (tcl-alpha-initialise)))
-	 (set-tcl-alpha-custom-destructor! voice (lambda (voice)
+       (let ((voice (tcl-interp-initialise)))
+	 (set-tcl-interp-custom-destructor! voice (lambda (voice)
 							(add-result 123)))
-	 (tcl-alpha-finalise voice)))
+	 (tcl-interp-finalise voice)))
     => '(#f (123)))
 
 ;;; --------------------------------------------------------------------
 ;;; hash
 
   (check-for-true
-   (integer? (tcl-alpha-hash (tcl-alpha-initialise))))
+   (integer? (tcl-interp-hash (tcl-interp-initialise))))
 
   (check
-      (let ((A (tcl-alpha-initialise))
-	    (B (tcl-alpha-initialise))
-	    (T (make-hashtable tcl-alpha-hash eq?)))
+      (let ((A (tcl-interp-initialise))
+	    (B (tcl-interp-initialise))
+	    (T (make-hashtable tcl-interp-hash eq?)))
 	(hashtable-set! T A 1)
 	(hashtable-set! T B 2)
 	(list (hashtable-ref T A #f)
@@ -124,34 +138,34 @@
 ;;; properties
 
   (check
-      (let ((S (tcl-alpha-initialise)))
-	(tcl-alpha-property-list S))
+      (let ((S (tcl-interp-initialise)))
+	(tcl-interp-property-list S))
     => '())
 
   (check
-      (let ((S (tcl-alpha-initialise)))
-	(tcl-alpha-putprop S 'ciao 'salut)
-	(tcl-alpha-getprop S 'ciao))
+      (let ((S (tcl-interp-initialise)))
+	(tcl-interp-putprop S 'ciao 'salut)
+	(tcl-interp-getprop S 'ciao))
     => 'salut)
 
   (check
-      (let ((S (tcl-alpha-initialise)))
-	(tcl-alpha-getprop S 'ciao))
+      (let ((S (tcl-interp-initialise)))
+	(tcl-interp-getprop S 'ciao))
     => #f)
 
   (check
-      (let ((S (tcl-alpha-initialise)))
-	(tcl-alpha-putprop S 'ciao 'salut)
-	(tcl-alpha-remprop S 'ciao)
-	(tcl-alpha-getprop S 'ciao))
+      (let ((S (tcl-interp-initialise)))
+	(tcl-interp-putprop S 'ciao 'salut)
+	(tcl-interp-remprop S 'ciao)
+	(tcl-interp-getprop S 'ciao))
     => #f)
 
   (check
-      (let ((S (tcl-alpha-initialise)))
-	(tcl-alpha-putprop S 'ciao 'salut)
-	(tcl-alpha-putprop S 'hello 'ohayo)
-	(list (tcl-alpha-getprop S 'ciao)
-	      (tcl-alpha-getprop S 'hello)))
+      (let ((S (tcl-interp-initialise)))
+	(tcl-interp-putprop S 'ciao 'salut)
+	(tcl-interp-putprop S 'hello 'ohayo)
+	(list (tcl-interp-getprop S 'ciao)
+	      (tcl-interp-getprop S 'hello)))
     => '(salut ohayo))
 
   (collect 'fullest))

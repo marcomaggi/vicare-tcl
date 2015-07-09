@@ -23,7 +23,7 @@ Scheme, an  R6RS compliant  Scheme implementation; it  provides bindings
 for the Tcl C language library.
 
   The last  time the author  bothered to  update this paragraph,  he had
-tested Tcl version 8.6.1.
+tested Tcl version 8.6.4.
 
   This package makes use of the GNU Autotools.
 
@@ -177,7 +177,7 @@ the home page of the Vicare project is at:
 
 Tcl can be found here:
 
-			 <http://core.tcl.tk/>
+			  <http://www.tcl.tk/>
 
 
 ### end of file

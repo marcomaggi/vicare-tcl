@@ -42,11 +42,11 @@
  ** Handling of Scheme objects.
  ** ----------------------------------------------------------------- */
 
-/* Accessors for the fields of the Scheme structure "tcl_alpha". */
-#define IK_TCL_ALPHA_POINTER(ALPHA)	IK_FIELD((ALPHA),0)
-#define IK_TCL_ALPHA_OWNER(ALPHA)		IK_FIELD((ALPHA),1)
-#define IK_TCL_ALPHA(ALPHA)	\
-  IK_POINTER_DATA_VOIDP(IK_TCL_ALPHA_POINTER(ALPHA))
+/* Accessors for the fields of the Scheme structure "tcl_interp". */
+#define IK_TCL_INTERP_POINTER(INTERP)	IK_FIELD((INTERP),0)
+#define IK_TCL_INTERP_OWNER(INTERP)	IK_FIELD((INTERP),1)
+#define IK_TCL_INTERP(INTERP)	\
+  IK_POINTER_DATA_VOIDP(IK_TCL_INTERP_POINTER(INTERP))
 
 
 /** --------------------------------------------------------------------

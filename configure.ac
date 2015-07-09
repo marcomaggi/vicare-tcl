@@ -100,7 +100,9 @@ dnl VICARE_CONSTANT_TESTS([XML_TRUE XML_FALSE])
 #page
 #### C language functions from the header file "libesmtp.h"
 
-dnl AC_CHECK_FUNCS([tcl_version])
+AC_CHECK_FUNCS([Tcl_Init Tcl_Preserve Tcl_Release])
+AC_CHECK_FUNCS([Tcl_CreateInterp Tcl_DeleteInterp Tcl_InterpDeleted])
+AC_CHECK_FUNCS([Tcl_Eval Tcl_SetVar])
 
 #page
 #### finish

@@ -35,9 +35,14 @@
     vicare-tcl-version-interface-age
     vicare-tcl-version
 
-    ;; tcl alpha
-    tcl-alpha-initialise
-    tcl-alpha-finalise
+    tcl-major-version
+    tcl-minor-version
+    tcl-release-serial
+    tcl-patch-level
+
+    ;; tcl interp
+    tcl-interp-initialise
+    tcl-interp-finalise
 
 ;;; --------------------------------------------------------------------
 ;;; still to be implemented
@@ -60,14 +65,28 @@
 (define-syntax-rule (vicare-tcl-version)
   (foreign-call "ikrt_tcl_version"))
 
+;;; --------------------------------------------------------------------
+
+(define-syntax-rule (tcl-major-version)
+  (foreign-call "ikrt_tcl_major_version"))
+
+(define-syntax-rule (tcl-minor-version)
+  (foreign-call "ikrt_tcl_minor_version"))
+
+(define-syntax-rule (tcl-release-serial)
+  (foreign-call "ikrt_tcl_release_serial"))
+
+(define-syntax-rule (tcl-patch-level)
+  (foreign-call "ikrt_tcl_patch_level"))
+
 
-;;;; tcl alpha struct
+;;;; tcl interp struct
 
-(define-syntax-rule (tcl-alpha-initialise)
-  (foreign-call "ikrt_tcl_alpha_initialise"))
+(define-syntax-rule (tcl-interp-initialise)
+  (foreign-call "ikrt_tcl_interp_initialise"))
 
-(define-syntax-rule (tcl-alpha-finalise alpha)
-  (foreign-call "ikrt_tcl_alpha_finalise" alpha))
+(define-syntax-rule (tcl-interp-finalise interp)
+  (foreign-call "ikrt_tcl_interp_finalise" interp))
 
 
 ;;;; still to be implemented
