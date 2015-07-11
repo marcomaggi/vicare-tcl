@@ -35,6 +35,12 @@
 (check-set-mode! 'report-failed)
 (check-display "*** testing Vicare Tcl bindings\n")
 
+(when #f
+  (struct-guardian-logger
+   (lambda (struct exc action)
+     (when (eq? action 'before-destruction)
+       (fprintf (stderr) "final destruction ~s\n" struct)))))
+
 
 ;;;; helpers
 
@@ -81,9 +87,9 @@
   (define who 'test)
 
   (check	;this will be garbage collected
-      (let ((voice (tcl-interp-initialise)))
-;;;(debug-print voice)
-	(tcl-interp? voice))
+      (let ((interp (tcl-interp-initialise)))
+;;;(debug-print interp)
+	(tcl-interp? interp))
     => #t)
 
   (check
@@ -91,20 +97,20 @@
     => #t)
 
   (check	;single finalisation
-      (let ((voice (tcl-interp-initialise)))
-  	(tcl-interp-finalise voice))
+      (let ((interp (tcl-interp-initialise)))
+  	(tcl-interp-finalise interp))
     => #f)
 
   (check	;double finalisation
-      (let ((voice (tcl-interp-initialise)))
-  	(tcl-interp-finalise voice)
-  	(tcl-interp-finalise voice))
+      (let ((interp (tcl-interp-initialise)))
+  	(tcl-interp-finalise interp)
+  	(tcl-interp-finalise interp))
     => #f)
 
   (check	;alive predicate after finalisation
-      (let ((voice (tcl-interp-initialise)))
-  	(tcl-interp-finalise voice)
-  	(tcl-interp?/alive voice))
+      (let ((interp (tcl-interp-initialise)))
+  	(tcl-interp-finalise interp)
+  	(tcl-interp?/alive interp))
     => #f)
 
 ;;; --------------------------------------------------------------------
@@ -112,10 +118,10 @@
 
   (check
       (with-result
-       (let ((voice (tcl-interp-initialise)))
-	 (set-tcl-interp-custom-destructor! voice (lambda (voice)
-							(add-result 123)))
-	 (tcl-interp-finalise voice)))
+	(let ((interp (tcl-interp-initialise)))
+	  (set-tcl-interp-custom-destructor! interp (lambda (interp)
+						      (add-result 123)))
+	  (tcl-interp-finalise interp)))
     => '(#f (123)))
 
 ;;; --------------------------------------------------------------------
@@ -171,8 +177,23 @@
   (collect 'fullest))
 
 
+(parametrise ((check-test-name		'scripts))
+
+  (check
+      (with-compensations
+	(letrec ((interp (compensate
+			     (tcl-interp-initialise)
+			   (with
+			    (tcl-interp-finalise interp)))))
+	  (tcl-interp-eval interp "puts stderr ciao")))
+    => #t)
+
+  (collect 'fullest))
+
+
 ;;;; done
 
+(collect 'fullest)
 (check-report)
 
 ;;; end of file

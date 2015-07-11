@@ -71,6 +71,7 @@ main (int argc, const char *const argv[])
     HAVE_TCL_PRESERVE\n\
     HAVE_TCL_RELEASE\n\
     HAVE_TCL_SETVAR\n\
+    HAVE_TCL_DOONEEVENT\n\
     )\n\
   (import (rnrs))\n\
 \n\
@@ -135,6 +136,14 @@ printf("(define-inline-constant HAVE_TCL_RELEASE %s)\n",
 
 printf("(define-inline-constant HAVE_TCL_SETVAR %s)\n",
 #ifdef HAVE_TCL_SETVAR
+  "#t"
+#else
+  "#f"
+#endif
+  );
+
+printf("(define-inline-constant HAVE_TCL_DOONEEVENT %s)\n",
+#ifdef HAVE_TCL_DOONEEVENT
   "#t"
 #else
   "#f"

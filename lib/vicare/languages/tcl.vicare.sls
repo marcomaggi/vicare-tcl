@@ -51,9 +51,11 @@
     tcl-interp-remprop			tcl-interp-property-list
     tcl-interp-hash
 
-;;; --------------------------------------------------------------------
-;;; still to be implemented
+    tcl-interp-eval
 
+    ;; event loop
+    tcl-events
+    tcl-do-one-event
     )
   (import (vicare (or (0 4 2015 5 (>= 26))
 		      (0 4 2015 (>= 6))
@@ -65,9 +67,8 @@
 			    (0 4 (>= 2016))))
 	    ffi.)
     (prefix (vicare ffi foreign-pointer-wrapper) ffi.)
-    #;(vicare arguments general-c-buffers)
-    #;(vicare language-extensions syntaxes)
-    #;(prefix (vicare platform words) words.))
+    (vicare arguments general-c-buffers)
+    (vicare language-extensions c-enumerations))
 
 
 ;;;; arguments validation
@@ -131,6 +132,36 @@
 
 (define* (tcl-interp-finalise {interp tcl-interp?})
   ($tcl-interp-finalise interp))
+
+;;; --------------------------------------------------------------------
+
+(define* (tcl-interp-eval {interp tcl-interp?/alive} {script general-c-string?})
+  (with-general-c-strings
+      ((script^	script))
+    (let ((rv (capi.tcl-interp-eval interp script^)))
+      (if (pair? rv)
+	  (error __who__ (ascii->string (cdr rv)) interp script)
+	rv))))
+
+
+;;;; event loop
+
+(define-c-ior-flags tcl-events
+  (TCL_ALL_EVENTS
+   TCL_DONT_WAIT
+   TCL_FILE_EVENTS
+   TCL_IDLE_EVENTS
+   TCL_TIMER_EVENTS
+   TCL_WINDOW_EVENTS)
+  (all
+   dont-wait
+   file
+   idle
+   timer
+   window))
+
+(define (tcl-do-one-event flags)
+  (capi.tcl-do-one-event (tcl-events->value)))
 
 
 ;;;; done

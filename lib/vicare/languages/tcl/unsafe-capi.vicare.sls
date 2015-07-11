@@ -43,11 +43,10 @@
     ;; tcl interp
     tcl-interp-initialise
     tcl-interp-finalise
+    tcl-interp-eval
 
-;;; --------------------------------------------------------------------
-;;; still to be implemented
-
-    )
+    ;; event loop
+    tcl-do-one-event)
   (import (vicare))
 
 
@@ -88,11 +87,16 @@
 (define-syntax-rule (tcl-interp-finalise interp)
   (foreign-call "ikrt_tcl_interp_finalise" interp))
 
-
-;;;; still to be implemented
+;;; --------------------------------------------------------------------
 
-#;(define-syntax-rule (vicare-tcl)
-  (foreign-call "ikrt_tcl"))
+(define-syntax-rule (tcl-interp-eval interp script)
+  (foreign-call "ikrt_tcl_interp_eval" interp script))
+
+
+;;;; events loop
+
+(define-syntax-rule (tcl-do-one-event flags)
+  (foreign-call "ikrt_tcl_do_one_event" flags))
 
 
 ;;;; done

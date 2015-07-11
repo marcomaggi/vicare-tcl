@@ -457,6 +457,40 @@ The following bindings are exported by the library
 @value{FOREIGN_SCHEME_LIB}.
 
 
+@deffn Syntax tcl-events @meta{symbol} @dots{}
+Build and return an enumeration set from the given @meta{symbol}
+arguments; the symbols represents flags to select the next event to
+service in the event loop.  The following symbols are accepted:
+
+@example
+all              dont-wait
+file             idle
+timer            window
+@end example
+
+@noindent
+and they correspond to the @tcl{} C preprocessor symbols:
+
+@example
+TCL_ALL_EVENTS          TCL_DONT_WAIT
+TCL_FILE_EVENTS         TCL_IDLE_EVENTS
+TCL_TIMER_EVENTS        TCL_WINDOW_EVENTS
+@end example
+@end deffn
+
+
+@defun tcl-do-one-event @var{events-set}
+Process the next event enqueued in the @tcl{} event loop.  To understand
+what exactly this procedure does, read the @cfunc{Tcl_DoOneEvent} manual
+page.
+
+This function returns @true{} if some event was processed, else returns
+@false{} (if the queue is empty).
+
+@var{events-set} must be a value returned by the syntax
+@syntax{tcl-events} representing an events selection value.
+@end defun
+
 @c page
 @ignore
 

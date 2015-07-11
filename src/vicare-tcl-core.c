@@ -29,6 +29,47 @@
  ** ----------------------------------------------------------------- */
 
 #include "vicare-tcl-internals.h"
+#include <string.h>
+
+
+/** --------------------------------------------------------------------
+ ** Tcl/Scheme objects conversion.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+scm_general_c_string_to_tcl_string_obj (ikptr_t s_obj)
+{
+  const char *	str = IK_GENERALISED_C_STRING(s_obj);
+  return Tcl_NewStringObj(str, strlen(str));
+}
+
+/* ------------------------------------------------------------------ */
+
+#if 0
+static Tcl_Obj *
+scm_bytevector_to_tcl_string (ikptr_t s_bv)
+{
+  ikuword_t	len	= IK_BYTEVECTOR_LENGTH(s_bv);
+  const char *	str	= IK_BYTEVECTOR_DATA_CHARP(s_bv);
+  return Tcl_NewStringObj(str, (int)len);
+}
+static ikptr_t
+scm_bytevector_from_tcl_string (ikpcb_t * pcb, Tcl_Obj * stringObj)
+{
+  int		len;
+  const char *	str;
+  str = Tcl_GetStringFromObj(stringObj, &len);
+  return ika_bytevector_from_cstring_len(pcb, str, len);
+}
+#endif
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ik_tcl_scm_from_tcl_obj (ikpcb_t * pcb, Tcl_Obj * resultObj)
+{
+  return IK_TRUE;
+}
 
 
 /** --------------------------------------------------------------------
@@ -45,6 +86,35 @@ ik_tcl_interp_finalise (Tcl_Interp * interp)
   }
   return TCL_OK;
 }
+static ikptr_t
+ik_tcl_interp_get_error_info (ikpcb_t * pcb, Tcl_Interp * interp)
+{
+  Tcl_Obj *	varNameObj;
+  Tcl_Obj *	errorInfoObj;
+  const char *	error_info_ptr;
+  int		error_info_len;
+  varNameObj = Tcl_NewStringObj("::errorInfo", -1);
+  Tcl_IncrRefCount(varNameObj);
+  errorInfoObj = Tcl_ObjGetVar2(interp, varNameObj, NULL, TCL_GLOBAL_ONLY);
+  Tcl_DecrRefCount(varNameObj);
+  error_info_ptr = Tcl_GetStringFromObj(errorInfoObj, &error_info_len);
+  return ika_bytevector_from_cstring_len(pcb, error_info_ptr, error_info_len);
+}
+static ikptr_t
+ik_tcl_interp_get_result (ikpcb_t * pcb, Tcl_Interp * interp)
+{
+  Tcl_Obj *	resultObj = Tcl_GetObjResult(interp);
+  ikptr_t	s_result;
+  Tcl_IncrRefCount(resultObj);
+  {
+    s_result = ik_tcl_scm_from_tcl_obj(pcb, resultObj);
+  }
+  Tcl_DecrRefCount(resultObj);
+  return s_result;
+}
+
+/* ------------------------------------------------------------------ */
+
 ikptr_t
 ikrt_tcl_interp_initialise (ikpcb_t * pcb)
 {
@@ -83,6 +153,8 @@ ikrt_tcl_interp_finalise (ikptr_t s_interp, ikpcb_t * pcb)
   if (ik_is_pointer(s_pointer)) {
     Tcl_Interp *	interp	= IK_POINTER_DATA_VOIDP(s_pointer);
     int			owner	= IK_BOOLEAN_TO_INT(IK_TCL_INTERP_OWNER(s_interp));
+    if (0)
+      ik_debug_message("%s: finalising interp %p, owner %d", __func__, (void*)interp, owner);
     if (interp && owner) {
       /* Register the  destruction function to  be used to  finalise the
 	 interp. */
@@ -95,6 +167,56 @@ ikrt_tcl_interp_finalise (ikptr_t s_interp, ikpcb_t * pcb)
   /* Return false so that the  return value of "$tcl-interp-finalise" is
      always false. */
   return IK_FALSE;
+#else
+  feature_failure(__func__);
+#endif
+}
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikpcb_t * pcb)
+{
+#if (defined HAVE_TCL_EVALOBJ)
+  Tcl_Interp *	interp = IK_TCL_INTERP(s_interp);
+  Tcl_Obj *	scriptObj;
+  scriptObj = scm_general_c_string_to_tcl_string_obj(s_script);
+  Tcl_IncrRefCount(scriptObj);
+  {
+    int		rv = Tcl_EvalObj(interp, scriptObj);
+    if (TCL_OK != rv) {
+      ikptr_t	s_error_info	= ik_tcl_interp_get_error_info (pcb, interp);
+      ikptr_t	s_pair;
+      pcb->root0 = &s_error_info;
+      {
+	s_pair = IKA_PAIR_ALLOC(pcb);
+	IK_CAR(s_pair) = IK_FIX(rv);
+	IK_CDR(s_pair) = s_error_info;
+      }
+      pcb->root0 = NULL;
+      return s_pair;
+    } else {
+      return ik_tcl_interp_get_result(pcb, interp);
+    }
+  }
+  Tcl_DecrRefCount(scriptObj);
+  return IK_TRUE;
+#else
+  feature_failure(__func__);
+#endif
+}
+
+
+/** --------------------------------------------------------------------
+ ** Events loop.
+ ** ----------------------------------------------------------------- */
+
+ikptr_t
+ikrt_tcl_do_one_event (ikptr_t s_flags, ikpcb_t * pcb)
+{
+#if (defined HAVE_TCL_DOONEEVENT)
+  int		flags = ik_integer_to_int(s_flags);
+  return IK_BOOLEAN_FROM_INT(Tcl_DoOneEvent(flags));
 #else
   feature_failure(__func__);
 #endif

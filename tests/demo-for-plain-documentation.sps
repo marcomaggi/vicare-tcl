@@ -56,6 +56,31 @@
   #t)
 
 
+;;;; Tk script
+
+(begin
+
+  (with-compensations
+    (letrec ((interp (compensate
+			 (tcl-interp-initialise)
+		       (with
+			(tcl-interp-finalise interp)))))
+      (tcl-interp-eval interp "
+package require Tk
+button .b -text Ok -command cmd
+bind .b <Return> cmd
+pack .b
+proc cmd {} {
+   global X
+   set X 1
+}
+set X 0
+focus .b
+vwait X")))
+
+  (void))
+
+
 ;;;; done
 
 

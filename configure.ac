@@ -75,9 +75,9 @@ AM_COND_IF([WANT_TIME_TESTS],
 #page
 #### tcl configuration
 
-AC_CHECK_HEADER([tcl.h],,[AC_MSG_ERROR([unable to find tcl header],1)])
+AC_CHECK_HEADERS([tcl.h],,[AC_MSG_ERROR([unable to find Tcl header],1)])
 AC_CHECK_LIB([tcl8.6],[Tcl_CreateInterp],[],
-    [AC_MSG_ERROR([unable to find tcl library],1)])
+    [AC_MSG_ERROR([unable to find Tcl library],1)])
 
 VICARE_EXTENSION_LIBRARY_VERSION([tcl],[0],[0],[0])
 
@@ -94,15 +94,15 @@ AC_INCLUDES_DEFAULT
 #endif
 ])
 
-dnl Stuff
-dnl VICARE_CONSTANT_TESTS([XML_TRUE XML_FALSE])
+VICARE_CONSTANT_TESTS([TCL_WINDOW_EVENTS TCL_FILE_EVENTS TCL_TIMER_EVENTS TCL_IDLE_EVENTS TCL_ALL_EVENTS TCL_DONT_WAIT])
 
 #page
 #### C language functions from the header file "libesmtp.h"
 
 AC_CHECK_FUNCS([Tcl_Init Tcl_Preserve Tcl_Release])
 AC_CHECK_FUNCS([Tcl_CreateInterp Tcl_DeleteInterp Tcl_InterpDeleted])
-AC_CHECK_FUNCS([Tcl_Eval Tcl_SetVar])
+AC_CHECK_FUNCS([Tcl_Eval Tcl_EvalObj Tcl_SetVar])
+AC_CHECK_FUNCS([Tcl_DoOneEvent])
 
 #page
 #### finish

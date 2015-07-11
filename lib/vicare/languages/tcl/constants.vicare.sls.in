@@ -26,10 +26,12 @@
 
 (library (vicare languages tcl constants)
   (export
-
-    THE_TCL
-
-    )
+    TCL_WINDOW_EVENTS
+    TCL_FILE_EVENTS
+    TCL_TIMER_EVENTS
+    TCL_IDLE_EVENTS
+    TCL_ALL_EVENTS
+    TCL_DONT_WAIT)
   (import (rename (only (vicare)
 			define-inline-constant)
 		  (define-inline-constant	defc)))
@@ -37,11 +39,13 @@
 
 ;;;; constants
 
-;;; Preprocessor symbols: XML_Bool
-;;(defc XML_TRUE		@VALUEOF_XML_TRUE@)
-
-(defc THE_TCL		123)
-
+;; events loop flags
+(defc TCL_WINDOW_EVENTS		@VALUEOF_TCL_WINDOW_EVENTS@)
+(defc TCL_FILE_EVENTS		@VALUEOF_TCL_FILE_EVENTS@)
+(defc TCL_TIMER_EVENTS		@VALUEOF_TCL_TIMER_EVENTS@)
+(defc TCL_IDLE_EVENTS		@VALUEOF_TCL_IDLE_EVENTS@)
+(defc TCL_ALL_EVENTS		@VALUEOF_TCL_ALL_EVENTS@)
+(defc TCL_DONT_WAIT		@VALUEOF_TCL_DONT_WAIT@)
 
 
 ;;;; done
