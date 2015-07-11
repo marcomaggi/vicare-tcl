@@ -274,6 +274,10 @@ Revised^6 Report on the algorithmic language Scheme
 @code{\NAME\}
 @end macro
 
+@macro syntax{NAME}
+@code{\NAME\}
+@end macro
+
 @macro snull{}
 @code{()}
 @end macro
