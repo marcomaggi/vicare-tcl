@@ -98,7 +98,7 @@
 
   (check	;single finalisation
       (let ((obj (tcl-obj-make-string "ciao")))
-	(debug-print 'str obj)
+	#;(debug-print 'str obj)
   	(tcl-obj-finalise obj))
     => #f)
 
@@ -283,8 +283,8 @@
 			     (tcl-interp-initialise)
 			   (with
 			    (tcl-interp-finalise interp)))))
-	  (tcl-interp-eval interp "puts stderr ciao")))
-    => #t)
+	  (tcl-obj->string (tcl-interp-eval interp "puts stderr ciao"))))
+    => "")
 
   (collect 'fullest))
 

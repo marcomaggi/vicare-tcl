@@ -318,6 +318,7 @@ number is the value of the C language preprocessor symbol
 @menu
 * plain obj struct::         @tcl{} object data structure.
 * plain obj ops::            Operating on @tcl{} objects.
+* plain obj conversion::     Converting @tcl{} objects.
 @end menu
 
 @c page
@@ -462,6 +463,26 @@ underlying @code{Tcl_Obj} value: @var{tclobj} is finalised, but the
 After an invocation to this function: @tcl{} code can no longer be
 evaluated in @var{tclobj}; to apply this function is equivalent to
 invoking @tclcode{obj delete} upon the objreter.
+@end defun
+
+@c page
+@node plain obj conversion
+@subsection Converting @tcl{} objects
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@defun tcl-obj->bytevector-string @var{tclobj}
+Return a Scheme bytevector containing the @utf{}-8 representation of
+@var{tclobj} as string.
+@end defun
+
+
+@defun tcl-obj->string @var{tclobj}
+Return a Scheme string containing the string representation of
+@var{tclobj}.
 @end defun
 
 @c page

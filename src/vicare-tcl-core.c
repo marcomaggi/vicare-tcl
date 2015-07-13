@@ -146,6 +146,10 @@ ikrt_tcl_obj_finalise (ikptr_t s_obj, ikpcb_t * pcb)
 
 static int
 ik_tcl_interp_finalise (Tcl_Interp * interp)
+/* Actually finalise the INTERP.  This  function is registered as interp
+   destructor with "Tcl_EventuallyFree()" and  it is called whenever the
+   last "Tcl_Release()" is  applied to the INTERP  causing its reference
+   counter to reach zero. */
 {
   if (0)
     ik_debug_message("%s: finalising interp %p", __func__, (void*)interp);
@@ -155,7 +159,11 @@ ik_tcl_interp_finalise (Tcl_Interp * interp)
   return TCL_OK;
 }
 static ikptr_t
-ik_tcl_interp_get_error_info (ikpcb_t * pcb, Tcl_Interp * interp)
+ika_tcl_interp_get_error_info (ikpcb_t * pcb, Tcl_Interp * interp)
+/* Retrieve  the current  value of  the global  variable "errorInfo"  in
+   INTERP; return a bytevector representing  an ASCII string.  It should
+   hold the  last error message  caused by  the evaluation of  TCL code.
+   For details see the "errorInfo(n)" manual page. */
 {
   Tcl_Obj *	varNameObj;
   Tcl_Obj *	errorInfoObj;
@@ -169,17 +177,14 @@ ik_tcl_interp_get_error_info (ikpcb_t * pcb, Tcl_Interp * interp)
   return ika_bytevector_from_cstring_len(pcb, error_info_ptr, error_info_len);
 }
 static ikptr_t
-ik_tcl_interp_get_result (ikpcb_t * pcb, Tcl_Interp * interp)
+ika_tcl_interp_get_result (ikpcb_t * pcb, Tcl_Interp * interp)
+/* Allocate  and return  a  new Scheme  pointer  object referencing  the
+   "Tcl_Obj" structure  representing the  result of evaluating  the last
+   script in INTERP. */
 {
   Tcl_Obj *	resultObj = Tcl_GetObjResult(interp);
-  ikptr_t	s_result;
   Tcl_IncrRefCount(resultObj);
-  {
-    //s_result = ik_tcl_scm_from_tcl_obj(pcb, resultObj);
-    s_result = IK_TRUE;
-  }
-  Tcl_DecrRefCount(resultObj);
-  return s_result;
+  return ika_pointer_alloc(pcb, (ikuword_t)resultObj);
 }
 
 /* ------------------------------------------------------------------ */
@@ -195,6 +200,9 @@ ikrt_tcl_interp_initialise (ikpcb_t * pcb)
     /* Implement reference counting for the  interp.  The interp is kept
        alive until "Tcl_Release()" is applied to the pointer. */
     Tcl_Preserve(interp);
+    /* Register  the destruction  function to  be used  to finalise  the
+       interp. */
+    Tcl_EventuallyFree(interp, (Tcl_FreeProc*)ik_tcl_interp_finalise);
     /* We want  the interp  to see  the commands  coming from  Vicare as
        non-interactive. */
     Tcl_SetVar(interp, "tcl_interactive", "0", TCL_GLOBAL_ONLY);
@@ -225,9 +233,6 @@ ikrt_tcl_interp_finalise (ikptr_t s_interp, ikpcb_t * pcb)
     if (0)
       ik_debug_message("%s: finalising interp %p, owner %d", __func__, (void*)interp, owner);
     if (interp && owner) {
-      /* Register the  destruction function to  be used to  finalise the
-	 interp. */
-      Tcl_EventuallyFree(interp, (Tcl_FreeProc*)ik_tcl_interp_finalise);
       /* Release the interp. */
       Tcl_Release(interp);
       IK_POINTER_SET_NULL(s_pointer);
@@ -254,7 +259,7 @@ ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikptr_t s_script_len, 
   {
     int		rv = Tcl_EvalObj(interp, scriptObj);
     if (TCL_OK != rv) {
-      ikptr_t	s_error_info	= ik_tcl_interp_get_error_info (pcb, interp);
+      ikptr_t	s_error_info	= ika_tcl_interp_get_error_info (pcb, interp);
       ikptr_t	s_pair;
       pcb->root0 = &s_error_info;
       {
@@ -265,7 +270,7 @@ ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikptr_t s_script_len, 
       pcb->root0 = NULL;
       return s_pair;
     } else {
-      return ik_tcl_interp_get_result(pcb, interp);
+      return ika_tcl_interp_get_result(pcb, interp);
     }
   }
   Tcl_DecrRefCount(scriptObj);

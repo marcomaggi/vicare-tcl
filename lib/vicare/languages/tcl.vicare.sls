@@ -52,6 +52,7 @@
 
     tcl-obj-make-string
     tcl-obj->bytevector-string
+    tcl-obj->string
 
     ;; tcl interp struct
     tcl-interp-initialise
@@ -161,6 +162,9 @@
 (define* (tcl-obj->bytevector-string {tclobj tcl-obj?/alive})
   (capi.tcl-obj-to-bytevector-string tclobj))
 
+(define* (tcl-obj->string {tclobj tcl-obj?/alive})
+  (utf8->string (capi.tcl-obj-to-bytevector-string tclobj)))
+
 
 ;;;; data structures: interp
 
@@ -201,9 +205,18 @@
    (with-general-c-strings
        ((script^	script))
      (let ((rv (capi.tcl-interp-eval interp script^ script.len)))
-       (if (pair? rv)
-	   (error __who__ (ascii->string (cdr rv)) interp script)
-	 rv)))))
+       (cond ((pointer? rv)
+	      ;;Successful  evaluation  of  the  script.   RV is  a  pointer  to  the
+	      ;;resulting "Tcl_Obj" structure.
+	      (make-tcl-obj/owner rv))
+	     ((pair? rv)
+	      ;;An error occurred.  The car of RV is a fixnum representing the return
+	      ;;value of "Tcl_EvalObj()".  The cdr of RV is a bytevector representing
+	      ;;the TCL stack trace of the error.
+	      (error __who__ (ascii->string (cdr rv)) interp script))
+	     (else
+	      (assertion-violation __who__
+		"invalid return value from" rv)))))))
 
 
 ;;;; event loop
