@@ -469,25 +469,18 @@ The following bindings are exported by the library
 @subsubheading String objects
 
 
-@defun tcl-obj-make-string @var{str}
-@defunx tcl-obj-make-string @var{str} @var{str.len}
-Build and return a new @objtype{tcl-obj} object holding a @tcl{}
-representation of @var{general-string}; if an error occurs raise an
-exception.  The arguments @var{str} and @var{str.len} must be a
-generalised C string, @cstringsref{}.
+@defun tcl-obj->utf8 @var{tclobj}
+Return a Scheme bytevector containing the @utf{}-8 representation of
+@var{tclobj} as string.
 @end defun
 
 
 @defun string->tcl-obj @var{str}
+@defunx string->tcl-obj @var{str} @var{str.len}
 Build and return a new @objtype{tcl-obj} object holding a @tcl{}
-representation of @var{str}, which must be a Scheme string; if an error
-occurs raise an exception.
-@end defun
-
-
-@defun tcl-obj->bytevector-string @var{tclobj}
-Return a Scheme bytevector containing the @utf{}-8 representation of
-@var{tclobj} as string.
+representation of @var{general-string}; if an error occurs raise an
+exception.  The arguments @var{str} and @var{str.len} must be a
+generalised C string, @cstringsref{}.
 @end defun
 
 
@@ -527,6 +520,61 @@ Return a Scheme boolean representing @var{tclobj} as boolean.
 Return a @objtype{tcl-obj} instance representing a boolean value.  If
 @var{bool} is @false{}: the boolean value is false; otherwise it is
 true.
+@end defun
+
+@c ------------------------------------------------------------------------
+
+@subsubheading C language @code{signed int} objects
+
+
+@defun tcl-obj->integer @var{tclobj}
+Return a Scheme integer representing @var{tclobj} as @code{signed int} C
+language value.
+@end defun
+
+
+@defun integer->tcl-obj @var{obj}
+Return a @objtype{tcl-obj} instance representing an integer value.
+@var{obj} must be an exact integer in the range of the C language type
+@code{signed int}.
+@end defun
+
+@c ------------------------------------------------------------------------
+
+@subsubheading C language @code{signed long} objects
+
+
+@defun tcl-obj->long @var{tclobj}
+Return a Scheme integer representing @var{tclobj} as @code{signed long}
+C language value.
+@end defun
+
+
+@defun long->tcl-obj @var{obj}
+Return a @objtype{tcl-obj} instance representing an integer value.
+@var{obj} must be an exact integer in the range of the C language type
+@code{signed long}.
+@end defun
+
+@c ------------------------------------------------------------------------
+
+@subsubheading C language @code{Tcl_WideInt} objects
+
+
+The C language type @code{Tcl_WideInt} is defined by @tcl{} to represent
+exact integers in the range of 64-bit words.
+
+
+@defun tcl-obj->wide-int @var{tclobj}
+Return a Scheme integer representing @var{tclobj} as @code{Tcl_WideInt}
+C language value.
+@end defun
+
+
+@defun wide-int->tcl-obj @var{obj}
+Return a @objtype{tcl-obj} instance representing an integer value.
+@var{obj} must be an exact integer in the range of the C language type
+@code{Tcl_WideInt}.
 @end defun
 
 @c page

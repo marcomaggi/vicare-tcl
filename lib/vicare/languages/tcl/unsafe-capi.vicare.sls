@@ -47,8 +47,11 @@
 
     ;; tcl obj
     tcl-obj-finalise
-    tcl-obj-pointer-from-general-string		tcl-obj-to-bytevector-string
-    tcl-obj-pointer-from-boolean		tcl-obj-boolean-to-boolean
+    tcl-obj-string-pointer-from-general-string	tcl-obj-string-to-bytevector-string
+    tcl-obj-boolean-pointer-from-boolean	tcl-obj-boolean-to-boolean
+    tcl-obj-int-pointer-from-integer		tcl-obj-int-to-integer
+    tcl-obj-long-pointer-from-integer		tcl-obj-long-to-integer
+    tcl-obj-wide-int-pointer-from-integer	tcl-obj-wide-int-to-integer
 
     ;; event loop
     tcl-do-one-event)
@@ -106,20 +109,47 @@
 ;;; --------------------------------------------------------------------
 ;;; string objects
 
-(define-syntax-rule (tcl-obj-pointer-from-general-string str str.len)
-  (foreign-call "ikrt_tcl_obj_pointer_from_general_string" str str.len))
+(define-syntax-rule (tcl-obj-string-pointer-from-general-string str str.len)
+  (foreign-call "ikrt_tcl_obj_string_pointer_from_general_string" str str.len))
 
-(define-syntax-rule (tcl-obj-to-bytevector-string tclobj)
-  (foreign-call "ikrt_tcl_obj_to_bytevector_string" tclobj))
+(define-syntax-rule (tcl-obj-string-to-bytevector-string tclobj)
+  (foreign-call "ikrt_tcl_obj_string_to_bytevector_string" tclobj))
 
 ;;; --------------------------------------------------------------------
 ;;; boolean objects
 
-(define-syntax-rule (tcl-obj-pointer-from-boolean bool)
-  (foreign-call "ikrt_tcl_obj_pointer_from_boolean" bool))
+(define-syntax-rule (tcl-obj-boolean-pointer-from-boolean bool)
+  (foreign-call "ikrt_tcl_obj_boolean_pointer_from_boolean" bool))
 
 (define-syntax-rule (tcl-obj-boolean-to-boolean tclobj)
   (foreign-call "ikrt_tcl_obj_boolean_to_boolean" tclobj))
+
+;;; --------------------------------------------------------------------
+;;; int objects
+
+(define-syntax-rule (tcl-obj-int-pointer-from-integer obj)
+  (foreign-call "ikrt_tcl_obj_int_pointer_from_integer" obj))
+
+(define-syntax-rule (tcl-obj-int-to-integer tclobj)
+  (foreign-call "ikrt_tcl_obj_int_to_integer" tclobj))
+
+;;; --------------------------------------------------------------------
+;;; long int objects
+
+(define-syntax-rule (tcl-obj-long-pointer-from-integer obj)
+  (foreign-call "ikrt_tcl_obj_long_pointer_from_integer" obj))
+
+(define-syntax-rule (tcl-obj-long-to-integer tclobj)
+  (foreign-call "ikrt_tcl_obj_long_to_integer" tclobj))
+
+;;; --------------------------------------------------------------------
+;;; wide int objects
+
+(define-syntax-rule (tcl-obj-wide-int-pointer-from-integer obj)
+  (foreign-call "ikrt_tcl_obj_wide_int_pointer_from_integer" obj))
+
+(define-syntax-rule (tcl-obj-wide-int-to-integer tclobj)
+  (foreign-call "ikrt_tcl_obj_wide_int_to_integer" tclobj))
 
 
 ;;;; events loop

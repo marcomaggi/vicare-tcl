@@ -30,6 +30,7 @@
   (vicare languages tcl)
   (vicare languages tcl constants)
 ;;;  (prefix (vicare ffi) ffi.)
+  (prefix (vicare platform words) words.)
   (vicare checks))
 
 (check-set-mode! 'report-failed)
@@ -87,29 +88,29 @@
   (define who 'test)
 
   (check	;this will be garbage collected
-      (let ((obj (tcl-obj-make-string "")))
+      (let ((obj (string->tcl-obj "")))
 	#;(debug-print obj)
 	(tcl-obj? obj))
     => #t)
 
   (check
-      (tcl-obj?/alive (tcl-obj-make-string ""))
+      (tcl-obj?/alive (string->tcl-obj ""))
     => #t)
 
   (check	;single finalisation
-      (let ((obj (tcl-obj-make-string "ciao")))
+      (let ((obj (string->tcl-obj "ciao")))
 	#;(debug-print 'str obj)
   	(tcl-obj-finalise obj))
     => #f)
 
   (check	;double finalisation
-      (let ((obj (tcl-obj-make-string "")))
+      (let ((obj (string->tcl-obj "")))
   	(tcl-obj-finalise obj)
   	(tcl-obj-finalise obj))
     => #f)
 
   (check	;alive predicate after finalisation
-      (let ((obj (tcl-obj-make-string "")))
+      (let ((obj (string->tcl-obj "")))
   	(tcl-obj-finalise obj)
   	(tcl-obj?/alive obj))
     => #f)
@@ -119,7 +120,7 @@
 
   (check
       (with-result
-	(let ((obj (tcl-obj-make-string "")))
+	(let ((obj (string->tcl-obj "")))
 	  (set-tcl-obj-custom-destructor! obj (lambda (obj)
 						(add-result 123)))
 	  (tcl-obj-finalise obj)))
@@ -129,11 +130,11 @@
 ;;; hash
 
   (check-for-true
-   (integer? (tcl-obj-hash (tcl-obj-make-string ""))))
+   (integer? (tcl-obj-hash (string->tcl-obj ""))))
 
   (check
-      (let ((A (tcl-obj-make-string ""))
-	    (B (tcl-obj-make-string ""))
+      (let ((A (string->tcl-obj ""))
+	    (B (string->tcl-obj ""))
 	    (T (make-hashtable tcl-obj-hash eq?)))
 	(hashtable-set! T A 1)
 	(hashtable-set! T B 2)
@@ -145,30 +146,30 @@
 ;;; properties
 
   (check
-      (let ((S (tcl-obj-make-string "")))
+      (let ((S (string->tcl-obj "")))
 	(tcl-obj-property-list S))
     => '())
 
   (check
-      (let ((S (tcl-obj-make-string "")))
+      (let ((S (string->tcl-obj "")))
 	(tcl-obj-putprop S 'ciao 'salut)
 	(tcl-obj-getprop S 'ciao))
     => 'salut)
 
   (check
-      (let ((S (tcl-obj-make-string "")))
+      (let ((S (string->tcl-obj "")))
 	(tcl-obj-getprop S 'ciao))
     => #f)
 
   (check
-      (let ((S (tcl-obj-make-string "")))
+      (let ((S (string->tcl-obj "")))
 	(tcl-obj-putprop S 'ciao 'salut)
 	(tcl-obj-remprop S 'ciao)
 	(tcl-obj-getprop S 'ciao))
     => #f)
 
   (check
-      (let ((S (tcl-obj-make-string "")))
+      (let ((S (string->tcl-obj "")))
 	(tcl-obj-putprop S 'ciao 'salut)
 	(tcl-obj-putprop S 'hello 'ohayo)
 	(list (tcl-obj-getprop S 'ciao)
@@ -295,6 +296,42 @@
 
   (check		(tcl-obj->string (boolean->tcl-obj #t))		=> "1")
   (check		(tcl-obj->string (boolean->tcl-obj #f))		=> "0")
+
+;;; --------------------------------------------------------------------
+;;; integers
+
+  (check (tcl-obj->integer (integer->tcl-obj +123))	=> +123)
+  (check (tcl-obj->integer (integer->tcl-obj -123))	=> -123)
+  (check
+      (tcl-obj->integer (integer->tcl-obj (words.least-c-signed-int)))
+    => (words.least-c-signed-int))
+  (check
+      (tcl-obj->integer (integer->tcl-obj (words.greatest-c-signed-int)))
+    => (words.greatest-c-signed-int))
+
+;;; --------------------------------------------------------------------
+;;; longs
+
+  (check (tcl-obj->long (long->tcl-obj +123))	=> +123)
+  (check (tcl-obj->long (long->tcl-obj -123))	=> -123)
+  (check
+      (tcl-obj->long (long->tcl-obj (words.least-c-signed-long)))
+    => (words.least-c-signed-long))
+  (check
+      (tcl-obj->long (long->tcl-obj (words.greatest-c-signed-long)))
+    => (words.greatest-c-signed-long))
+
+;;; --------------------------------------------------------------------
+;;; wides
+
+  (check (tcl-obj->wide-int (wide-int->tcl-obj +123))	=> +123)
+  (check (tcl-obj->wide-int (wide-int->tcl-obj -123))	=> -123)
+  (check
+      (tcl-obj->wide-int (wide-int->tcl-obj (words.least-s64)))
+    => (words.least-s64))
+  (check
+      (tcl-obj->wide-int (wide-int->tcl-obj (words.greatest-s64)))
+    => (words.greatest-s64))
 
   (collect 'fullest))
 

@@ -50,9 +50,12 @@
     tcl-obj-remprop			tcl-obj-property-list
     tcl-obj-hash
 
-    tcl-obj-make-string			tcl-obj->bytevector-string
+    tcl-obj->utf8
     string->tcl-obj			tcl-obj->string
     boolean->tcl-obj			tcl-obj->boolean
+    integer->tcl-obj			tcl-obj->integer
+    long->tcl-obj			tcl-obj->long
+    wide-int->tcl-obj			tcl-obj->wide-int
 
     ;; tcl interp struct
     tcl-interp-initialise
@@ -81,7 +84,8 @@
 	    ffi.)
     (prefix (vicare ffi foreign-pointer-wrapper) ffi.)
     (vicare arguments general-c-buffers)
-    (vicare language-extensions c-enumerations))
+    (vicare language-extensions c-enumerations)
+    (prefix (vicare platform words) words.))
 
 
 ;;;; arguments validation
@@ -133,7 +137,7 @@
       (%display "#[tcl-obj")
       (%display " pointer=")	(%display ($tcl-obj-pointer  S))
       (when ($tcl-obj-pointer S)
-	(let ((bv (capi.tcl-obj-to-bytevector-string S)))
+	(let ((bv (capi.tcl-obj-string-to-bytevector-string S)))
 	  (if (bytevector-empty? bv)
 	      (%display " string-rep=\"\"")
 	    (begin
@@ -147,39 +151,30 @@
 ;;; --------------------------------------------------------------------
 ;;; string objects
 
-(case-define* tcl-obj-make-string
+(define* (tcl-obj->utf8 {tclobj tcl-obj?/alive})
+  (capi.tcl-obj-string-to-bytevector-string tclobj))
+
+(case-define* string->tcl-obj
   ((str)
-   (tcl-obj-make-string str #f))
+   (string->tcl-obj str #f))
   ((str str.len)
    (assert-general-c-string-and-length __who__ str str.len)
    (with-general-c-strings
        ((str^	str))
-     (cond ((capi.tcl-obj-pointer-from-general-string str^ str.len)
+     (cond ((capi.tcl-obj-string-pointer-from-general-string str^ str.len)
 	    => (lambda (rv)
 		 (make-tcl-obj/owner rv)))
 	   (else
 	    (error __who__ "unable to create Tcl string object" str str.len))))))
 
-(define* (string->tcl-obj {str string?})
-  (with-general-c-strings
-      ((str^	str))
-    (cond ((capi.tcl-obj-pointer-from-general-string str^ #f)
-	   => (lambda (rv)
-		(make-tcl-obj/owner rv)))
-	  (else
-	   (error __who__ "unable to create Tcl string object" str)))))
-
-(define* (tcl-obj->bytevector-string {tclobj tcl-obj?/alive})
-  (capi.tcl-obj-to-bytevector-string tclobj))
-
 (define* (tcl-obj->string {tclobj tcl-obj?/alive})
-  (utf8->string (capi.tcl-obj-to-bytevector-string tclobj)))
+  (utf8->string (capi.tcl-obj-string-to-bytevector-string tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; boolean objects
 
 (define* (boolean->tcl-obj bool)
-  (cond ((capi.tcl-obj-pointer-from-boolean bool)
+  (cond ((capi.tcl-obj-boolean-pointer-from-boolean bool)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -189,7 +184,58 @@
   (let ((rv (capi.tcl-obj-boolean-to-boolean tclobj)))
     (if (null? rv)
 	;;TCLOBJ does not represent a boolean.
-	(error __who__ "unsble to create boolean representation of Tcl_Obj" tclobj)
+	(error __who__ "unable to create boolean representation of Tcl_Obj" tclobj)
+      rv)))
+
+;;; --------------------------------------------------------------------
+;;; integer objects
+
+(define* (integer->tcl-obj {obj words.signed-int?})
+  (cond ((capi.tcl-obj-int-pointer-from-integer obj)
+	 => (lambda (rv)
+	      (make-tcl-obj/owner rv)))
+	(else
+	 (error __who__ "unable to create Tcl \"signed int\" object" obj))))
+
+(define* (tcl-obj->integer {tclobj tcl-obj?/alive})
+  (let ((rv (capi.tcl-obj-int-to-integer tclobj)))
+    (if (null? rv)
+	;;TCLOBJ does not represent a integer.
+	(error __who__ "unable to create \"signed int\" representation of Tcl_Obj" tclobj)
+      rv)))
+
+;;; --------------------------------------------------------------------
+;;; long objects
+
+(define* (long->tcl-obj {obj words.signed-long?})
+  (cond ((capi.tcl-obj-long-pointer-from-integer obj)
+	 => (lambda (rv)
+	      (make-tcl-obj/owner rv)))
+	(else
+	 (error __who__ "unable to create Tcl \"singed long\" object" obj))))
+
+(define* (tcl-obj->long {tclobj tcl-obj?/alive})
+  (let ((rv (capi.tcl-obj-long-to-integer tclobj)))
+    (if (null? rv)
+	;;TCLOBJ does not represent a long.
+	(error __who__ "unable to create \"signed long\" representation of Tcl_Obj" tclobj)
+      rv)))
+
+;;; --------------------------------------------------------------------
+;;; wide objects
+
+(define* (wide-int->tcl-obj {obj words.word-s64?})
+  (cond ((capi.tcl-obj-wide-int-pointer-from-integer obj)
+	 => (lambda (rv)
+	      (make-tcl-obj/owner rv)))
+	(else
+	 (error __who__ "unable to create Tcl \"Tcl_WideInt\" object" obj))))
+
+(define* (tcl-obj->wide-int {tclobj tcl-obj?/alive})
+  (let ((rv (capi.tcl-obj-wide-int-to-integer tclobj)))
+    (if (null? rv)
+	;;TCLOBJ does not represent a wide.
+	(error __who__ "unable to create \"Tcl_WideInt\" representation of Tcl_Obj" tclobj)
       rv)))
 
 

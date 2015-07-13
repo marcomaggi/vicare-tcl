@@ -124,7 +124,7 @@ ika_tcl_obj_string_to_bytevector (ikpcb_t * pcb, Tcl_Obj * objPtr)
 /* ------------------------------------------------------------------ */
 
 ikptr_t
-ikrt_tcl_obj_pointer_from_general_string (ikptr_t s_str, ikptr_t s_str_len, ikpcb_t * pcb)
+ikrt_tcl_obj_string_pointer_from_general_string (ikptr_t s_str, ikptr_t s_str_len, ikpcb_t * pcb)
 /* Build  a new  "Tcl_Obj" representing  a string  initialised from  the
    general C string referenced by S_STR.
 
@@ -137,7 +137,7 @@ ikrt_tcl_obj_pointer_from_general_string (ikptr_t s_str, ikptr_t s_str_len, ikpc
   return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
 }
 ikptr_t
-ikrt_tcl_obj_to_bytevector_string (ikptr_t s_obj, ikpcb_t * pcb)
+ikrt_tcl_obj_string_to_bytevector_string (ikptr_t s_obj, ikpcb_t * pcb)
 /* Return  a   new  Scheme  bytevector  object   containing  the  string
    representation of the "Tcl_Obj" referenced by S_OBJ, which must be an
    instance of "tcl-obj" Scheme struct. */
@@ -170,7 +170,7 @@ ik_tcl_obj_boolean_to_boolean (ikpcb_t * pcb, Tcl_Obj * objPtr)
 /* ------------------------------------------------------------------ */
 
 ikptr_t
-ikrt_tcl_obj_pointer_from_boolean (ikptr_t s_bool, ikpcb_t * pcb)
+ikrt_tcl_obj_boolean_pointer_from_boolean (ikptr_t s_bool, ikpcb_t * pcb)
 /* Build a new "Tcl_Obj" representing a boolean initialised from S_BOOL.
 
    This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
@@ -183,11 +183,147 @@ ikrt_tcl_obj_pointer_from_boolean (ikptr_t s_bool, ikpcb_t * pcb)
 }
 ikptr_t
 ikrt_tcl_obj_boolean_to_boolean (ikptr_t s_obj, ikpcb_t * pcb)
-/* Return  a   new  Scheme  bytevector  object   containing  the  string
-   representation of the "Tcl_Obj" referenced by S_OBJ, which must be an
-   instance of "tcl-obj" Scheme struct. */
+/* Return a  Scheme boolean  object as  representation of  the "Tcl_Obj"
+   referenced by  S_OBJ, which must  be an instance of  "tcl-obj" Scheme
+   struct. */
 {
   return ik_tcl_obj_boolean_to_boolean(pcb, IK_TCL_OBJ(s_obj));
+}
+
+
+/** --------------------------------------------------------------------
+ ** Tcl_Obj struct: integers.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+ik_tcl_obj_integer_from_integer (ikptr_t s_obj)
+{
+  return Tcl_NewIntObj(ik_integer_to_int(s_obj));
+}
+static ikptr_t
+ika_tcl_obj_integer_to_integer (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  int	result;
+  if (TCL_ERROR == Tcl_GetIntFromObj(NULL, objPtr, &result)) {
+    return IK_NULL;
+  } else {
+    return ika_integer_from_int(pcb, result);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ikrt_tcl_obj_int_pointer_from_integer (ikptr_t s_obj, ikpcb_t * pcb)
+/* Build  a  new  "Tcl_Obj"  representing an  integer  initialised  from
+   S_OBJ.
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
+{
+  Tcl_Obj *	objPtr = ik_tcl_obj_integer_from_integer(s_obj);
+  Tcl_IncrRefCount(objPtr);
+  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+}
+ikptr_t
+ikrt_tcl_obj_int_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return a new  Scheme integer object containing  the representation of
+   the  "Tcl_Obj" referenced  by S_OBJ,  which  must be  an instance  of
+   "tcl-obj" Scheme struct. */
+{
+  return ika_tcl_obj_integer_to_integer(pcb, IK_TCL_OBJ(s_obj));
+}
+
+
+/** --------------------------------------------------------------------
+ ** Tcl_Obj struct: long.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+ik_tcl_obj_long_from_integer (ikptr_t s_obj)
+{
+  return Tcl_NewLongObj(ik_integer_to_long(s_obj));
+}
+static ikptr_t
+ika_tcl_obj_long_to_integer (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  long	result;
+  if (TCL_ERROR == Tcl_GetLongFromObj(NULL, objPtr, &result)) {
+    return IK_NULL;
+  } else {
+    return ika_integer_from_long(pcb, result);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ikrt_tcl_obj_long_pointer_from_integer (ikptr_t s_obj, ikpcb_t * pcb)
+/* Build a new "Tcl_Obj" representing  a "long" integer initialised from
+   S_OBJ.
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
+{
+  Tcl_Obj *	objPtr = ik_tcl_obj_long_from_integer(s_obj);
+  Tcl_IncrRefCount(objPtr);
+  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+}
+ikptr_t
+ikrt_tcl_obj_long_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return   a   new  Scheme   exact   integer   object  containing   the
+   representation of the "Tcl_Obj" referenced by S_OBJ, which must be an
+   instance of "tcl-obj" Scheme struct representing a "long". */
+{
+  return ika_tcl_obj_long_to_integer(pcb, IK_TCL_OBJ(s_obj));
+}
+
+
+/** --------------------------------------------------------------------
+ ** Tcl_Obj struct: wide.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+ik_tcl_obj_wide_from_integer (ikptr_t s_obj)
+{
+  return Tcl_NewWideIntObj(ik_integer_to_sint64(s_obj));
+}
+static ikptr_t
+ika_tcl_obj_wide_to_integer (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  Tcl_WideInt	result;
+  if (TCL_ERROR == Tcl_GetWideIntFromObj(NULL, objPtr, &result)) {
+    return IK_NULL;
+  } else {
+    return ika_integer_from_sint64(pcb, (int64_t)result);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ikrt_tcl_obj_wide_int_pointer_from_integer (ikptr_t s_obj, ikpcb_t * pcb)
+/* Build   a  new   "Tcl_Obj"  representing   a  "Tcl_WideInt"   integer
+   initialised from S_OBJ; the  "Tcl_WideInt" represents a singed 64-bit
+   value.  For details see the manual page "Tcl_NewWideIntObj()".
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
+{
+  Tcl_Obj *	objPtr = ik_tcl_obj_wide_from_integer(s_obj);
+  Tcl_IncrRefCount(objPtr);
+  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+}
+ikptr_t
+ikrt_tcl_obj_wide_int_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return   a   new  Scheme   exact   integer   object  containing   the
+   representation of the "Tcl_Obj" referenced by S_OBJ, which must be an
+   instance of "tcl-obj" Scheme struct representing a "Tcl_WideInt". */
+{
+  return ika_tcl_obj_wide_to_integer(pcb, IK_TCL_OBJ(s_obj));
 }
 
 
