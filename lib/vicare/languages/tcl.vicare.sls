@@ -56,6 +56,7 @@
     integer->tcl-obj			tcl-obj->integer
     long->tcl-obj			tcl-obj->long
     wide-int->tcl-obj			tcl-obj->wide-int
+    flonum->tcl-obj			tcl-obj->flonum
 
     ;; tcl interp struct
     tcl-interp-initialise
@@ -236,6 +237,23 @@
     (if (null? rv)
 	;;TCLOBJ does not represent a wide.
 	(error __who__ "unable to create \"Tcl_WideInt\" representation of Tcl_Obj" tclobj)
+      rv)))
+
+;;; --------------------------------------------------------------------
+;;; double objects
+
+(define* (flonum->tcl-obj {obj flonum?})
+  (cond ((capi.tcl-obj-double-pointer-from-flonum obj)
+	 => (lambda (rv)
+	      (make-tcl-obj/owner rv)))
+	(else
+	 (error __who__ "unable to create Tcl \"double\" object" obj))))
+
+(define* (tcl-obj->flonum {tclobj tcl-obj?/alive})
+  (let ((rv (capi.tcl-obj-double-to-flonum tclobj)))
+    (if (null? rv)
+	;;TCLOBJ does not represent a flonum.
+	(error __who__ "unable to create \"double\" representation of Tcl_Obj" tclobj)
       rv)))
 
 

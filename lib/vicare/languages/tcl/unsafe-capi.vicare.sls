@@ -52,6 +52,7 @@
     tcl-obj-int-pointer-from-integer		tcl-obj-int-to-integer
     tcl-obj-long-pointer-from-integer		tcl-obj-long-to-integer
     tcl-obj-wide-int-pointer-from-integer	tcl-obj-wide-int-to-integer
+    tcl-obj-double-pointer-from-flonum		tcl-obj-double-to-flonum
 
     ;; event loop
     tcl-do-one-event)
@@ -150,6 +151,15 @@
 
 (define-syntax-rule (tcl-obj-wide-int-to-integer tclobj)
   (foreign-call "ikrt_tcl_obj_wide_int_to_integer" tclobj))
+
+;;; --------------------------------------------------------------------
+;;; double objects
+
+(define-syntax-rule (tcl-obj-double-pointer-from-flonum obj)
+  (foreign-call "ikrt_tcl_obj_double_pointer_from_flonum" obj))
+
+(define-syntax-rule (tcl-obj-double-to-flonum tclobj)
+  (foreign-call "ikrt_tcl_obj_double_to_flonum" tclobj))
 
 
 ;;;; events loop

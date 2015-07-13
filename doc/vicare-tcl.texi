@@ -577,6 +577,22 @@ Return a @objtype{tcl-obj} instance representing an integer value.
 @code{Tcl_WideInt}.
 @end defun
 
+@c ------------------------------------------------------------------------
+
+@subsubheading C language @code{double} objects
+
+
+@defun tcl-obj->flonum @var{tclobj}
+Return a Scheme flonum representing @var{tclobj} as @code{double} C
+language value.
+@end defun
+
+
+@defun flonum->tcl-obj @var{obj}
+Return a @objtype{tcl-obj} instance representing a real number.
+@var{obj} must be a flonum.
+@end defun
+
 @c page
 @node plain interp
 @section Interp objects

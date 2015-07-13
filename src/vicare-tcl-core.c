@@ -282,7 +282,7 @@ ikrt_tcl_obj_long_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
 
 
 /** --------------------------------------------------------------------
- ** Tcl_Obj struct: wide.
+ ** Tcl_Obj struct: wide int.
  ** ----------------------------------------------------------------- */
 
 static Tcl_Obj *
@@ -324,6 +324,51 @@ ikrt_tcl_obj_wide_int_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
    instance of "tcl-obj" Scheme struct representing a "Tcl_WideInt". */
 {
   return ika_tcl_obj_wide_to_integer(pcb, IK_TCL_OBJ(s_obj));
+}
+
+
+/** --------------------------------------------------------------------
+ ** Tcl_Obj struct: double.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+ik_tcl_obj_double_from_flonum (ikptr_t s_obj)
+{
+  return Tcl_NewDoubleObj(IK_FLONUM_DATA(s_obj));
+}
+static ikptr_t
+ika_tcl_obj_double_to_flonum (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  double	result;
+  if (TCL_ERROR == Tcl_GetDoubleFromObj(NULL, objPtr, &result)) {
+    return IK_NULL;
+  } else {
+    return ika_flonum_from_double(pcb, result);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ikrt_tcl_obj_double_pointer_from_flonum (ikptr_t s_obj, ikpcb_t * pcb)
+/* Build a new "Tcl_Obj" representing  a "double" number initialised from
+   S_OBJ.
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
+{
+  Tcl_Obj *	objPtr = ik_tcl_obj_double_from_flonum(s_obj);
+  Tcl_IncrRefCount(objPtr);
+  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+}
+ikptr_t
+ikrt_tcl_obj_double_to_flonum (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return a  new Scheme flonum  object containing the  representation of
+   the  "Tcl_Obj" referenced  by S_OBJ,  which  must be  an instance  of
+   "tcl-obj" Scheme struct representing a "double". */
+{
+  return ika_tcl_obj_double_to_flonum(pcb, IK_TCL_OBJ(s_obj));
 }
 
 

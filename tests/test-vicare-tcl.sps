@@ -322,7 +322,7 @@
     => (words.greatest-c-signed-long))
 
 ;;; --------------------------------------------------------------------
-;;; wides
+;;; wide ints
 
   (check (tcl-obj->wide-int (wide-int->tcl-obj +123))	=> +123)
   (check (tcl-obj->wide-int (wide-int->tcl-obj -123))	=> -123)
@@ -332,6 +332,18 @@
   (check
       (tcl-obj->wide-int (wide-int->tcl-obj (words.greatest-s64)))
     => (words.greatest-s64))
+
+;;; --------------------------------------------------------------------
+;;; doubles
+
+  (check (tcl-obj->flonum (flonum->tcl-obj +123.0))	=> +123.0)
+  (check (tcl-obj->flonum (flonum->tcl-obj -123.0))	=> -123.0)
+  (check
+      (tcl-obj->flonum (flonum->tcl-obj +123.456e7))
+    => +123.456e7)
+  (check
+      (tcl-obj->flonum (flonum->tcl-obj -123.456e-7))
+    => -123.456e-7)
 
   (collect 'fullest))
 
