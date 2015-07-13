@@ -41,6 +41,18 @@
     tcl-release-serial
     tcl-patch-level
 
+    ;; tcl obj
+    tcl-obj-finalise
+    tcl-obj?
+    tcl-obj?/alive			$tcl-obj-alive?
+    tcl-obj-custom-destructor		set-tcl-obj-custom-destructor!
+    tcl-obj-putprop			tcl-obj-getprop
+    tcl-obj-remprop			tcl-obj-property-list
+    tcl-obj-hash
+
+    tcl-obj-make-string
+    tcl-obj->bytevector-string
+
     ;; tcl interp struct
     tcl-interp-initialise
     tcl-interp-finalise
@@ -104,6 +116,52 @@
   (ascii->string (capi.tcl-patch-level)))
 
 
+;;;; data structures: obj
+
+(ffi.define-foreign-pointer-wrapper tcl-obj
+  (ffi.foreign-destructor capi.tcl-obj-finalise)
+  (ffi.collector-struct-type #f))
+
+(module ()
+  (set-rtd-printer! (type-descriptor tcl-obj)
+    (lambda (S port sub-printer)
+      (define-syntax-rule (%display thing)
+	(display thing port))
+      (define-syntax-rule (%write thing)
+	(write thing port))
+      (%display "#[tcl-obj")
+      (%display " pointer=")	(%display ($tcl-obj-pointer  S))
+      (when ($tcl-obj-pointer S)
+	(let ((bv (capi.tcl-obj-to-bytevector-string S)))
+	  (if (bytevector-empty? bv)
+	      (%display " string-rep=\"\"")
+	    (begin
+	      (%display " string-rep=")
+	      (%write (utf8->string bv))))))
+      (%display "]"))))
+
+(define* (tcl-obj-finalise {obj tcl-obj?})
+  ($tcl-obj-finalise obj))
+
+;;; --------------------------------------------------------------------
+
+(case-define* tcl-obj-make-string
+  ((str)
+   (tcl-obj-make-string str #f))
+  ((str str.len)
+   (assert-general-c-string-and-length __who__ str str.len)
+   (with-general-c-strings
+       ((str^	str))
+     (cond ((capi.tcl-obj-pointer-from-general-string str^ str.len)
+	    => (lambda (rv)
+		 (make-tcl-obj/owner rv)))
+	   (else
+	    (error __who__ "unable to create Tcl string object" str str.len))))))
+
+(define* (tcl-obj->bytevector-string {tclobj tcl-obj?/alive})
+  (capi.tcl-obj-to-bytevector-string tclobj))
+
+
 ;;;; data structures: interp
 
 (ffi.define-foreign-pointer-wrapper tcl-interp
@@ -135,13 +193,17 @@
 
 ;;; --------------------------------------------------------------------
 
-(define* (tcl-interp-eval {interp tcl-interp?/alive} {script general-c-string?})
-  (with-general-c-strings
-      ((script^	script))
-    (let ((rv (capi.tcl-interp-eval interp script^)))
-      (if (pair? rv)
-	  (error __who__ (ascii->string (cdr rv)) interp script)
-	rv))))
+(case-define* tcl-interp-eval
+  ((interp script)
+   (tcl-interp-eval interp script #f))
+  (({interp tcl-interp?/alive} script script.len)
+   (assert-general-c-string-and-length __who__ script script.len)
+   (with-general-c-strings
+       ((script^	script))
+     (let ((rv (capi.tcl-interp-eval interp script^ script.len)))
+       (if (pair? rv)
+	   (error __who__ (ascii->string (cdr rv)) interp script)
+	 rv)))))
 
 
 ;;;; event loop
@@ -161,10 +223,12 @@
    window))
 
 (define (tcl-do-one-event flags)
-  (capi.tcl-do-one-event (tcl-events->value)))
+  (capi.tcl-do-one-event (tcl-events->value flags)))
 
 
 ;;;; done
+
+(foreign-call "ikrt_tcl_global_initialisation" (vicare-argv0))
 
 #| end of library |# )
 

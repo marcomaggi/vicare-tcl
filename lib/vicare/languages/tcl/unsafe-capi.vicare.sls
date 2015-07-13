@@ -45,6 +45,11 @@
     tcl-interp-finalise
     tcl-interp-eval
 
+    ;; tcl obj
+    tcl-obj-pointer-from-general-string
+    tcl-obj-to-bytevector-string
+    tcl-obj-finalise
+
     ;; event loop
     tcl-do-one-event)
   (import (vicare))
@@ -89,8 +94,22 @@
 
 ;;; --------------------------------------------------------------------
 
-(define-syntax-rule (tcl-interp-eval interp script)
-  (foreign-call "ikrt_tcl_interp_eval" interp script))
+(define-syntax-rule (tcl-interp-eval interp script script.len)
+  (foreign-call "ikrt_tcl_interp_eval" interp script script.len))
+
+
+;;;; tcl obj struct
+
+(define-syntax-rule (tcl-obj-pointer-from-general-string str str.len)
+  (foreign-call "ikrt_tcl_obj_pointer_from_general_string" str str.len))
+
+(define-syntax-rule (tcl-obj-to-bytevector-string str)
+  (foreign-call "ikrt_tcl_obj_to_bytevector_string" str))
+
+;;; --------------------------------------------------------------------
+
+(define-syntax-rule (tcl-obj-finalise obj)
+  (foreign-call "ikrt_tcl_obj_finalise" obj))
 
 
 ;;;; events loop

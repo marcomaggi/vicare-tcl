@@ -81,6 +81,103 @@
   #t)
 
 
+(parametrise ((check-test-name		'struct-obj)
+	      (struct-guardian-logger	#t))
+
+  (define who 'test)
+
+  (check	;this will be garbage collected
+      (let ((obj (tcl-obj-make-string "")))
+	#;(debug-print obj)
+	(tcl-obj? obj))
+    => #t)
+
+  (check
+      (tcl-obj?/alive (tcl-obj-make-string ""))
+    => #t)
+
+  (check	;single finalisation
+      (let ((obj (tcl-obj-make-string "ciao")))
+	(debug-print 'str obj)
+  	(tcl-obj-finalise obj))
+    => #f)
+
+  (check	;double finalisation
+      (let ((obj (tcl-obj-make-string "")))
+  	(tcl-obj-finalise obj)
+  	(tcl-obj-finalise obj))
+    => #f)
+
+  (check	;alive predicate after finalisation
+      (let ((obj (tcl-obj-make-string "")))
+  	(tcl-obj-finalise obj)
+  	(tcl-obj?/alive obj))
+    => #f)
+
+;;; --------------------------------------------------------------------
+;;; destructor
+
+  (check
+      (with-result
+	(let ((obj (tcl-obj-make-string "")))
+	  (set-tcl-obj-custom-destructor! obj (lambda (obj)
+						(add-result 123)))
+	  (tcl-obj-finalise obj)))
+    => '(#f (123)))
+
+;;; --------------------------------------------------------------------
+;;; hash
+
+  (check-for-true
+   (integer? (tcl-obj-hash (tcl-obj-make-string ""))))
+
+  (check
+      (let ((A (tcl-obj-make-string ""))
+	    (B (tcl-obj-make-string ""))
+	    (T (make-hashtable tcl-obj-hash eq?)))
+	(hashtable-set! T A 1)
+	(hashtable-set! T B 2)
+	(list (hashtable-ref T A #f)
+	      (hashtable-ref T B #f)))
+    => '(1 2))
+
+;;; --------------------------------------------------------------------
+;;; properties
+
+  (check
+      (let ((S (tcl-obj-make-string "")))
+	(tcl-obj-property-list S))
+    => '())
+
+  (check
+      (let ((S (tcl-obj-make-string "")))
+	(tcl-obj-putprop S 'ciao 'salut)
+	(tcl-obj-getprop S 'ciao))
+    => 'salut)
+
+  (check
+      (let ((S (tcl-obj-make-string "")))
+	(tcl-obj-getprop S 'ciao))
+    => #f)
+
+  (check
+      (let ((S (tcl-obj-make-string "")))
+	(tcl-obj-putprop S 'ciao 'salut)
+	(tcl-obj-remprop S 'ciao)
+	(tcl-obj-getprop S 'ciao))
+    => #f)
+
+  (check
+      (let ((S (tcl-obj-make-string "")))
+	(tcl-obj-putprop S 'ciao 'salut)
+	(tcl-obj-putprop S 'hello 'ohayo)
+	(list (tcl-obj-getprop S 'ciao)
+	      (tcl-obj-getprop S 'hello)))
+    => '(salut ohayo))
+
+  (collect 'fullest))
+
+
 (parametrise ((check-test-name		'struct-interp)
 	      (struct-guardian-logger	#t))
 
@@ -175,6 +272,7 @@
     => '(salut ohayo))
 
   (collect 'fullest))
+
 
 
 (parametrise ((check-test-name		'scripts))

@@ -60,6 +60,14 @@
 @acronym{TK}
 @end macro
 
+@macro tclcmd{NAME}
+@code{[\NAME\]}
+@end macro
+
+@macro tclcode{CODE}
+@code{[\CODE\]}
+@end macro
+
 @c page
 @c ------------------------------------------------------------
 @c Copyright notice.
@@ -248,6 +256,7 @@ for @value{FOREIGN_PACKAGE}.
 
 @menu
 * plain version::               @value{PACKAGE} version informations.
+* plain obj::                   @tcl{} objects.
 * plain interp::                @tcl{} interpreter objects.
 * plain misc::                  Miscellaneous operations.
 @end menu
@@ -299,6 +308,160 @@ defined in the header file @file{tcl.h}.
 Return a Scheme string representing the @tcl{} version number.  This
 number is the value of the C language preprocessor symbol
 @code{TCL_PATCH_LEVEL} defined in the header file @file{tcl.h}.
+@end defun
+
+@c page
+@node plain obj
+@section @tcl{} objects
+
+
+@menu
+* plain obj struct::         @tcl{} object data structure.
+* plain obj ops::            Operating on @tcl{} objects.
+@end menu
+
+@c page
+@node plain obj struct
+@subsection Obj data structure
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@deftp {Struct Type} tcl-obj
+@cindex Argument @var{tclobj}
+@cindex @var{tclobj} argument
+Opaque structure type referencing an instance of the C language type
+@code{Tcl_Obj}.  When instances of this type are used as arguments to
+functions: this documentation identifies them as @var{tclobj}.
+
+Instances of this type must be finalised with @func{tcl-obj-finalise};
+whenever an instance of this type is garbage collected:
+@func{tcl-obj-finalise} is automatically applied to it and any error
+ignored.
+
+In certain contexts, instances of this type own the referenced
+@code{Tcl_Obj} value, in other contexts they do not:
+
+@itemize
+@item
+Finalising a @objtype{tcl-obj} instance owning the @code{Tcl_Obj} value,
+causes finalisation of the @code{Tcl_Obj} value too.
+
+@item
+Finalising a @objtype{tcl-obj} instance @strong{not} owning the
+@code{Tcl_Obj} value, leaves the @code{Tcl_Obj} untouched.
+@end itemize
+
+@noindent
+this should happen transparently.
+@end deftp
+
+
+@defun tcl-obj? @var{obj}
+Return @true{} if @var{obj} is an instance of @objtype{tcl-obj};
+otherwise return @false{}.
+@end defun
+
+
+@defun tcl-obj?/alive @var{obj}
+Return @true{} if @var{obj} is an instance of @objtype{tcl-obj} and it
+has not been finalised; return @false{} otherwise.
+@end defun
+
+@c ------------------------------------------------------------
+
+@subsubheading Object properties
+
+
+@defun tcl-obj-putprop @var{obj} @var{key} @var{value}
+Add a new property @var{key} to the property list of @var{obj};
+@var{key} must be a symbol.  If @var{key} is already set: the old entry
+is mutated to reference the new @var{value}.
+@end defun
+
+
+@defun tcl-obj-getprop @var{obj} @var{key}
+Return the value of the property @var{key} in the property list of
+@var{obj}; if @var{key} is not set: return @false{}.  @var{key} must
+be a symbol.
+@end defun
+
+
+@defun tcl-obj-remprop @var{obj} @var{key}
+Remove the property @var{key} from the property list of @var{obj}; if
+@var{key} is not set: nothing happens.  @var{key} must be a symbol.
+@end defun
+
+
+@defun tcl-obj-property-list @var{obj}
+Return a new association list representing the property list of
+@var{obj}.  The order of the entries is the same as the property
+creation order.
+@end defun
+
+@c ------------------------------------------------------------
+
+@subsubheading Custom destructor
+
+
+@defun tcl-obj-custom-destructor @var{obj}
+@defunx set-tcl-obj-custom-destructor! @var{obj} @var{func}
+Retrieve or set a destructor function associated to @var{obj}.
+
+Whenever @var{obj} is finalised, either explicitly with
+@func{tcl-obj-finalise} or implicitly by the garbage collector,
+@var{func} is applied to @var{obj} before the internal state of
+@var{obj} is destroyed.
+@end defun
+
+@c ------------------------------------------------------------
+
+@subsubheading Other operations
+
+
+@defun tcl-obj-hash @var{obj}
+Return an exact integer to be used as hashtable key for @var{obj}.
+Hashtables having a @objtype{tcl-obj} as key can be instantiated
+as follows:
+
+@example
+(make-hashtable tcl-obj-hash eq?)
+@end example
+@end defun
+
+@c page
+@node plain obj ops
+@subsection Operating on obj objects
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@defun tcl-obj-make-string @var{str}
+@defunx tcl-obj-make-string @var{str} @var{str.len}
+Build and return a new @objtype{tcl-obj} object holding a @tcl{}
+representation of @var{general-string}; if an error occurs raise an
+exception.  The arguments @var{str} and @var{str.len} must be a
+generalised C string, @cstringsref{}.
+@end defun
+
+
+@defun tcl-obj-finalise @var{tclobj}
+Finalise @var{tclobj}; return unspecified values.  It is fine to apply
+this function multiple times to the same @var{tclobj} value: the first
+time the underlying data is finalised, the subsequent times nothing
+happens.
+
+If this function is applied to an @var{tclobj} value not owning the
+underlying @code{Tcl_Obj} value: @var{tclobj} is finalised, but the
+@code{Tcl_Obj} value is left alone.
+
+After an invocation to this function: @tcl{} code can no longer be
+evaluated in @var{tclobj}; to apply this function is equivalent to
+invoking @tclcode{obj delete} upon the objreter.
 @end defun
 
 @c page
@@ -397,8 +560,8 @@ creation order.
 @subsubheading Custom destructor
 
 
-@defun interp-custom-destructor @var{interp}
-@defunx set-interp-custom-destructor! @var{interp} @var{func}
+@defun tcl-interp-custom-destructor @var{interp}
+@defunx set-tcl-interp-custom-destructor! @var{interp} @var{func}
 Retrieve or set a destructor function associated to @var{interp}.
 
 Whenever @var{interp} is finalised, either explicitly with
@@ -434,6 +597,17 @@ The following bindings are exported by the library
 @defun tcl-interp-initialise
 Build and return a new @objtype{tcl-interp} object; if an error
 occurs raise an exception.
+
+The built in @tcl{} command @tclcmd{exit} command is @strong{removed}
+from the returned interpreter because it causes the whole Vicare process
+to terminate.  If we desire: we have to create our own @tclcmd{exit}
+procedure to replace it; @value{PACKAGE} does not implement a
+replacement.
+
+@quotation
+@strong{NOTE} The only way to create a safe @tcl{} interpreter is to
+create it as slave of one created with this function.
+@end quotation
 @end defun
 
 
@@ -446,6 +620,16 @@ happens.
 If this function is applied to an @var{interp} value not owning the
 underlying @code{Tcl_Interp} value: @var{interp} is finalised, but the
 @code{Tcl_Interp} value is left alone.
+
+After an invocation to this function: @tcl{} code can no longer be
+evaluated in @var{interp}; to apply this function is equivalent to
+invoking @tclcode{interp delete} upon the interpreter.
+@end defun
+
+
+@defun tcl-interp-eval @var{interp} @var{script}
+Evaluate the @tcl{} @var{script} in the context of @var{interp}.  The
+argument @var{script} must be a generalised C string, @cstringsref{}.
 @end defun
 
 @c page

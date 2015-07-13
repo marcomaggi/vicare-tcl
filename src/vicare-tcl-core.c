@@ -33,14 +33,38 @@
 
 
 /** --------------------------------------------------------------------
+ ** Global initialisation.
+ ** ----------------------------------------------------------------- */
+
+ikptr_t
+ikrt_tcl_global_initialisation (ikptr_t s_executable, ikpcb_t * pcb)
+/* This must be called before calling any Tcl function to perform global
+   initialisation operations. */
+{
+  Tcl_FindExecutable(IK_BYTEVECTOR_DATA_CHARP(s_executable));
+  return IK_VOID;
+}
+
+
+/** --------------------------------------------------------------------
  ** Tcl/Scheme objects conversion.
  ** ----------------------------------------------------------------- */
 
 static Tcl_Obj *
-scm_general_c_string_to_tcl_string_obj (ikptr_t s_obj)
+ik_tcl_obj_string_from_general_c_string (ikptr_t s_buf, ikptr_t s_buf_len)
 {
-  const char *	str = IK_GENERALISED_C_STRING(s_obj);
-  return Tcl_NewStringObj(str, strlen(str));
+  size_t	len = ik_generalised_c_buffer_len(s_buf, s_buf_len);
+  const char *	str = IK_GENERALISED_C_STRING(s_buf);
+  if (0)
+    ik_debug_message("%s: creating new string: %d, \"%s\"", __func__, len, str);
+  return Tcl_NewStringObj(str, len);
+}
+static ikptr_t
+ika_tcl_obj_string_to_bytevector (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  int		len;
+  const char *	str = Tcl_GetStringFromObj(objPtr, &len);
+  return ika_bytevector_from_cstring_len(pcb, str, len);
 }
 
 /* ------------------------------------------------------------------ */
@@ -63,12 +87,56 @@ scm_bytevector_from_tcl_string (ikpcb_t * pcb, Tcl_Obj * stringObj)
 }
 #endif
 
+
+/** --------------------------------------------------------------------
+ ** Obj struct.
+ ** ----------------------------------------------------------------- */
+
+ikptr_t
+ikrt_tcl_obj_pointer_from_general_string (ikptr_t s_str, ikptr_t s_str_len, ikpcb_t * pcb)
+/* Build  a new  "Tcl_Obj" representing  a string  initialised from  the
+   general C string referenced by S_STR.
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
+{
+  Tcl_Obj *	objPtr = ik_tcl_obj_string_from_general_c_string(s_str, s_str_len);
+  Tcl_IncrRefCount(objPtr);
+  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+}
+ikptr_t
+ikrt_tcl_obj_to_bytevector_string (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return  a   new  Scheme  bytevector  object   containing  the  string
+   representation of the "Tcl_Obj" referenced by S_OBJ, which must be an
+   instance of "tcl-obj" Scheme struct. */
+{
+  return ika_tcl_obj_string_to_bytevector(pcb, IK_TCL_OBJ(s_obj));
+}
+
 /* ------------------------------------------------------------------ */
 
 ikptr_t
-ik_tcl_scm_from_tcl_obj (ikpcb_t * pcb, Tcl_Obj * resultObj)
+ikrt_tcl_obj_finalise (ikptr_t s_obj, ikpcb_t * pcb)
+/* This  function is  called from  Scheme code  to finalise  a "tcl-obj"
+   Scheme struct. */
 {
-  return IK_TRUE;
+  ikptr_t	s_pointer	= IK_TCL_OBJ_POINTER(s_obj);
+  if (ik_is_pointer(s_pointer)) {
+    Tcl_Obj *	objPtr	= IK_POINTER_DATA_VOIDP(s_pointer);
+    int		owner	= IK_BOOLEAN_TO_INT(IK_TCL_OBJ_OWNER(s_obj));
+    if (0)
+      ik_debug_message("%s: finalising obj %p, owner %d, type=%p, refCount=%d, bytes=%p",
+		       __func__, (void*)objPtr, owner,
+		       objPtr->typePtr, objPtr->refCount, (void *)objPtr->bytes);
+    if (objPtr && owner) {
+      Tcl_DecrRefCount(objPtr);
+      IK_POINTER_SET_NULL(s_pointer);
+    }
+  }
+  /* Return false  so that  the return  value of  "$tcl-obj-finalise" is
+     always false. */
+  return IK_FALSE;
 }
 
 
@@ -107,7 +175,8 @@ ik_tcl_interp_get_result (ikpcb_t * pcb, Tcl_Interp * interp)
   ikptr_t	s_result;
   Tcl_IncrRefCount(resultObj);
   {
-    s_result = ik_tcl_scm_from_tcl_obj(pcb, resultObj);
+    //s_result = ik_tcl_scm_from_tcl_obj(pcb, resultObj);
+    s_result = IK_TRUE;
   }
   Tcl_DecrRefCount(resultObj);
   return s_result;
@@ -175,12 +244,12 @@ ikrt_tcl_interp_finalise (ikptr_t s_interp, ikpcb_t * pcb)
 /* ------------------------------------------------------------------ */
 
 ikptr_t
-ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikpcb_t * pcb)
+ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikptr_t s_script_len, ikpcb_t * pcb)
 {
 #if (defined HAVE_TCL_EVALOBJ)
   Tcl_Interp *	interp = IK_TCL_INTERP(s_interp);
   Tcl_Obj *	scriptObj;
-  scriptObj = scm_general_c_string_to_tcl_string_obj(s_script);
+  scriptObj = ik_tcl_obj_string_from_general_c_string(s_script, s_script_len);
   Tcl_IncrRefCount(scriptObj);
   {
     int		rv = Tcl_EvalObj(interp, scriptObj);

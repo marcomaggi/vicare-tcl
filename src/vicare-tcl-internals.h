@@ -48,6 +48,12 @@
 #define IK_TCL_INTERP(INTERP)	\
   IK_POINTER_DATA_VOIDP(IK_TCL_INTERP_POINTER(INTERP))
 
+/* Accessors for the fields of the Scheme structure "Tcl_Obj". */
+#define IK_TCL_OBJ_POINTER(OBJ)		IK_FIELD((OBJ),0)
+#define IK_TCL_OBJ_OWNER(OBJ)		IK_FIELD((OBJ),1)
+#define IK_TCL_OBJ(OBJ)	\
+  IK_POINTER_DATA_VOIDP(IK_TCL_OBJ_POINTER(OBJ))
+
 
 /** --------------------------------------------------------------------
  ** Support for missing functions.
