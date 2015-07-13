@@ -593,6 +593,21 @@ Return a @objtype{tcl-obj} instance representing a real number.
 @var{obj} must be a flonum.
 @end defun
 
+@c ------------------------------------------------------------------------
+
+@subsubheading Byte array objects
+
+
+@defun tcl-obj->bytevector @var{tclobj}
+Return a Scheme bytevector representing @var{tclobj} as byte array.
+@end defun
+
+
+@defun bytevector->tcl-obj @var{obj}
+Return a @objtype{tcl-obj} instance representing a byte array.
+@var{obj} must be a bytevector.
+@end defun
+
 @c page
 @node plain interp
 @section Interp objects

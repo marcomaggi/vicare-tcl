@@ -53,6 +53,7 @@
     tcl-obj-long-pointer-from-integer		tcl-obj-long-to-integer
     tcl-obj-wide-int-pointer-from-integer	tcl-obj-wide-int-to-integer
     tcl-obj-double-pointer-from-flonum		tcl-obj-double-to-flonum
+    tcl-obj-bytearray-pointer-from-bytevector	tcl-obj-bytearray-to-bytevector
 
     ;; event loop
     tcl-do-one-event)
@@ -160,6 +161,15 @@
 
 (define-syntax-rule (tcl-obj-double-to-flonum tclobj)
   (foreign-call "ikrt_tcl_obj_double_to_flonum" tclobj))
+
+;;; --------------------------------------------------------------------
+;;; bytearray objects
+
+(define-syntax-rule (tcl-obj-bytearray-pointer-from-bytevector obj)
+  (foreign-call "ikrt_tcl_obj_bytearray_pointer_from_bytevector" obj))
+
+(define-syntax-rule (tcl-obj-bytearray-to-bytevector tclobj)
+  (foreign-call "ikrt_tcl_obj_bytearray_to_bytevector" tclobj))
 
 
 ;;;; events loop

@@ -57,6 +57,7 @@
     long->tcl-obj			tcl-obj->long
     wide-int->tcl-obj			tcl-obj->wide-int
     flonum->tcl-obj			tcl-obj->flonum
+    bytevector->tcl-obj			tcl-obj->bytevector
 
     ;; tcl interp struct
     tcl-interp-initialise
@@ -254,6 +255,23 @@
     (if (null? rv)
 	;;TCLOBJ does not represent a flonum.
 	(error __who__ "unable to create \"double\" representation of Tcl_Obj" tclobj)
+      rv)))
+
+;;; --------------------------------------------------------------------
+;;; bytearray objects
+
+(define* (bytevector->tcl-obj {obj bytevector?})
+  (cond ((capi.tcl-obj-bytearray-pointer-from-bytevector obj)
+	 => (lambda (rv)
+	      (make-tcl-obj/owner rv)))
+	(else
+	 (error __who__ "unable to create Tcl byte array object" obj))))
+
+(define* (tcl-obj->bytevector {tclobj tcl-obj?/alive})
+  (let ((rv (capi.tcl-obj-bytearray-to-bytevector tclobj)))
+    (if (null? rv)
+	;;TCLOBJ does not represent a byte array.
+	(error __who__ "unable to create byte array representation of Tcl_Obj" tclobj)
       rv)))
 
 

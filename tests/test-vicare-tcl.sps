@@ -345,6 +345,12 @@
       (tcl-obj->flonum (flonum->tcl-obj -123.456e-7))
     => -123.456e-7)
 
+;;; --------------------------------------------------------------------
+;;; bytearrays
+
+  (check (tcl-obj->bytevector (bytevector->tcl-obj '#vu8()))		=> '#vu8())
+  (check (tcl-obj->bytevector (bytevector->tcl-obj '#vu8(1 2 3 4)))	=> '#vu8(1 2 3 4))
+
   (collect 'fullest))
 
 

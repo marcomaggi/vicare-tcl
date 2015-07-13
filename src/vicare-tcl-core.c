@@ -373,6 +373,51 @@ ikrt_tcl_obj_double_to_flonum (ikptr_t s_obj, ikpcb_t * pcb)
 
 
 /** --------------------------------------------------------------------
+ ** Tcl_Obj struct: byte array.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+ik_tcl_obj_bytearray_from_bytevector (ikptr_t s_obj)
+{
+  size_t	bv_len = IK_BYTEVECTOR_LENGTH(s_obj);
+  uint8_t *	bv_ptr = IK_BYTEVECTOR_DATA_UINT8P(s_obj);
+  return Tcl_NewByteArrayObj(bv_ptr, bv_len);
+}
+static ikptr_t
+ika_tcl_obj_bytearray_to_bytevector (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  int		bv_len;
+  uint8_t *	bv_ptr;
+  bv_ptr = Tcl_GetByteArrayFromObj(objPtr, &bv_len);
+  return ika_bytevector_from_memory_block(pcb, bv_ptr, (size_t)bv_len);
+}
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ikrt_tcl_obj_bytearray_pointer_from_bytevector (ikptr_t s_obj, ikpcb_t * pcb)
+/* Build  a new  "Tcl_Obj" representing  a byte  array initialised  from
+   S_OBJ.
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
+{
+  Tcl_Obj *	objPtr = ik_tcl_obj_bytearray_from_bytevector(s_obj);
+  Tcl_IncrRefCount(objPtr);
+  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+}
+ikptr_t
+ikrt_tcl_obj_bytearray_to_bytevector (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return a  new Scheme bytevector object  containing the representation
+   of the  "Tcl_Obj" referenced by S_OBJ,  which must be an  instance of
+   "tcl-obj" Scheme struct representing a byte array. */
+{
+  return ika_tcl_obj_bytearray_to_bytevector(pcb, IK_TCL_OBJ(s_obj));
+}
+
+
+/** --------------------------------------------------------------------
  ** Interp struct.
  ** ----------------------------------------------------------------- */
 
