@@ -50,22 +50,6 @@ ikrt_tcl_global_initialisation (ikptr_t s_executable, ikpcb_t * pcb)
  ** Tcl/Scheme objects conversion.
  ** ----------------------------------------------------------------- */
 
-static Tcl_Obj *
-ik_tcl_obj_string_from_general_c_string (ikptr_t s_buf, ikptr_t s_buf_len)
-{
-  size_t	len = ik_generalised_c_buffer_len(s_buf, s_buf_len);
-  const char *	str = IK_GENERALISED_C_STRING(s_buf);
-  if (0)
-    ik_debug_message("%s: creating new string: %d, \"%s\"", __func__, len, str);
-  return Tcl_NewStringObj(str, len);
-}
-static ikptr_t
-ika_tcl_obj_string_to_bytevector (ikpcb_t * pcb, Tcl_Obj * objPtr)
-{
-  int		len;
-  const char *	str = Tcl_GetStringFromObj(objPtr, &len);
-  return ika_bytevector_from_cstring_len(pcb, str, len);
-}
 
 /* ------------------------------------------------------------------ */
 
@@ -89,8 +73,55 @@ scm_bytevector_from_tcl_string (ikpcb_t * pcb, Tcl_Obj * stringObj)
 
 
 /** --------------------------------------------------------------------
- ** Obj struct.
+ ** Tcl_Obj struct: finalisation.
  ** ----------------------------------------------------------------- */
+
+ikptr_t
+ikrt_tcl_obj_finalise (ikptr_t s_obj, ikpcb_t * pcb)
+/* This  function is  called from  Scheme code  to finalise  a "tcl-obj"
+   Scheme struct. */
+{
+  ikptr_t	s_pointer	= IK_TCL_OBJ_POINTER(s_obj);
+  if (ik_is_pointer(s_pointer)) {
+    Tcl_Obj *	objPtr	= IK_POINTER_DATA_VOIDP(s_pointer);
+    int		owner	= IK_BOOLEAN_TO_INT(IK_TCL_OBJ_OWNER(s_obj));
+    if (0)
+      ik_debug_message("%s: finalising obj %p, owner %d, type=%p, refCount=%d, bytes=%p",
+		       __func__, (void*)objPtr, owner,
+		       objPtr->typePtr, objPtr->refCount, (void *)objPtr->bytes);
+    if (objPtr && owner) {
+      Tcl_DecrRefCount(objPtr);
+      IK_POINTER_SET_NULL(s_pointer);
+    }
+  }
+  /* Return false  so that  the return  value of  "$tcl-obj-finalise" is
+     always false. */
+  return IK_FALSE;
+}
+
+
+/** --------------------------------------------------------------------
+ ** Tcl_Obj struct: strings.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+ik_tcl_obj_string_from_general_c_string (ikptr_t s_buf, ikptr_t s_buf_len)
+{
+  size_t	len = ik_generalised_c_buffer_len(s_buf, s_buf_len);
+  const char *	str = IK_GENERALISED_C_STRING(s_buf);
+  if (0)
+    ik_debug_message("%s: creating new string: %d, \"%s\"", __func__, len, str);
+  return Tcl_NewStringObj(str, len);
+}
+static ikptr_t
+ika_tcl_obj_string_to_bytevector (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  int		len;
+  const char *	str = Tcl_GetStringFromObj(objPtr, &len);
+  return ika_bytevector_from_cstring_len(pcb, str, len);
+}
+
+/* ------------------------------------------------------------------ */
 
 ikptr_t
 ikrt_tcl_obj_pointer_from_general_string (ikptr_t s_str, ikptr_t s_str_len, ikpcb_t * pcb)
@@ -114,29 +145,49 @@ ikrt_tcl_obj_to_bytevector_string (ikptr_t s_obj, ikpcb_t * pcb)
   return ika_tcl_obj_string_to_bytevector(pcb, IK_TCL_OBJ(s_obj));
 }
 
+
+/** --------------------------------------------------------------------
+ ** Tcl_Obj struct: booleans.
+ ** ----------------------------------------------------------------- */
+
+static Tcl_Obj *
+ik_tcl_obj_boolean_from_boolean (ikptr_t s_bool)
+{
+  return Tcl_NewBooleanObj(IK_BOOLEAN_TO_INT(s_bool));
+}
+static ikptr_t
+ik_tcl_obj_boolean_to_boolean (ikpcb_t * pcb, Tcl_Obj * objPtr)
+{
+  int	result;
+  if (TCL_ERROR == Tcl_GetBooleanFromObj(NULL, objPtr, &result)) {
+    return IK_NULL;
+  } else {
+    /* ik_debug_message("%s: result %d", __func__, result); */
+    return IK_BOOLEAN_FROM_INT(result);
+  }
+}
+
 /* ------------------------------------------------------------------ */
 
 ikptr_t
-ikrt_tcl_obj_finalise (ikptr_t s_obj, ikpcb_t * pcb)
-/* This  function is  called from  Scheme code  to finalise  a "tcl-obj"
-   Scheme struct. */
+ikrt_tcl_obj_pointer_from_boolean (ikptr_t s_bool, ikpcb_t * pcb)
+/* Build a new "Tcl_Obj" representing a boolean initialised from S_BOOL.
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
 {
-  ikptr_t	s_pointer	= IK_TCL_OBJ_POINTER(s_obj);
-  if (ik_is_pointer(s_pointer)) {
-    Tcl_Obj *	objPtr	= IK_POINTER_DATA_VOIDP(s_pointer);
-    int		owner	= IK_BOOLEAN_TO_INT(IK_TCL_OBJ_OWNER(s_obj));
-    if (0)
-      ik_debug_message("%s: finalising obj %p, owner %d, type=%p, refCount=%d, bytes=%p",
-		       __func__, (void*)objPtr, owner,
-		       objPtr->typePtr, objPtr->refCount, (void *)objPtr->bytes);
-    if (objPtr && owner) {
-      Tcl_DecrRefCount(objPtr);
-      IK_POINTER_SET_NULL(s_pointer);
-    }
-  }
-  /* Return false  so that  the return  value of  "$tcl-obj-finalise" is
-     always false. */
-  return IK_FALSE;
+  Tcl_Obj *	objPtr = ik_tcl_obj_boolean_from_boolean(s_bool);
+  Tcl_IncrRefCount(objPtr);
+  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+}
+ikptr_t
+ikrt_tcl_obj_boolean_to_boolean (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return  a   new  Scheme  bytevector  object   containing  the  string
+   representation of the "Tcl_Obj" referenced by S_OBJ, which must be an
+   instance of "tcl-obj" Scheme struct. */
+{
+  return ik_tcl_obj_boolean_to_boolean(pcb, IK_TCL_OBJ(s_obj));
 }
 
 

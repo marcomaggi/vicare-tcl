@@ -50,9 +50,9 @@
     tcl-obj-remprop			tcl-obj-property-list
     tcl-obj-hash
 
-    tcl-obj-make-string
-    tcl-obj->bytevector-string
-    tcl-obj->string
+    tcl-obj-make-string			tcl-obj->bytevector-string
+    string->tcl-obj			tcl-obj->string
+    boolean->tcl-obj			tcl-obj->boolean
 
     ;; tcl interp struct
     tcl-interp-initialise
@@ -117,7 +117,7 @@
   (ascii->string (capi.tcl-patch-level)))
 
 
-;;;; data structures: obj
+;;;; data structures: tcl-obj
 
 (ffi.define-foreign-pointer-wrapper tcl-obj
   (ffi.foreign-destructor capi.tcl-obj-finalise)
@@ -145,6 +145,7 @@
   ($tcl-obj-finalise obj))
 
 ;;; --------------------------------------------------------------------
+;;; string objects
 
 (case-define* tcl-obj-make-string
   ((str)
@@ -159,14 +160,40 @@
 	   (else
 	    (error __who__ "unable to create Tcl string object" str str.len))))))
 
+(define* (string->tcl-obj {str string?})
+  (with-general-c-strings
+      ((str^	str))
+    (cond ((capi.tcl-obj-pointer-from-general-string str^ #f)
+	   => (lambda (rv)
+		(make-tcl-obj/owner rv)))
+	  (else
+	   (error __who__ "unable to create Tcl string object" str)))))
+
 (define* (tcl-obj->bytevector-string {tclobj tcl-obj?/alive})
   (capi.tcl-obj-to-bytevector-string tclobj))
 
 (define* (tcl-obj->string {tclobj tcl-obj?/alive})
   (utf8->string (capi.tcl-obj-to-bytevector-string tclobj)))
 
+;;; --------------------------------------------------------------------
+;;; boolean objects
+
+(define* (boolean->tcl-obj bool)
+  (cond ((capi.tcl-obj-pointer-from-boolean bool)
+	 => (lambda (rv)
+	      (make-tcl-obj/owner rv)))
+	(else
+	 (error __who__ "unable to create Tcl boolean object" bool))))
+
+(define* (tcl-obj->boolean {tclobj tcl-obj?/alive})
+  (let ((rv (capi.tcl-obj-boolean-to-boolean tclobj)))
+    (if (null? rv)
+	;;TCLOBJ does not represent a boolean.
+	(error __who__ "unsble to create boolean representation of Tcl_Obj" tclobj)
+      rv)))
+
 
-;;;; data structures: interp
+;;;; data structures: tcl-interp
 
 (ffi.define-foreign-pointer-wrapper tcl-interp
   (ffi.foreign-destructor capi.tcl-interp-finalise)

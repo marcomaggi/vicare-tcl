@@ -441,15 +441,6 @@ The following bindings are exported by the library
 @value{FOREIGN_SCHEME_LIB}.
 
 
-@defun tcl-obj-make-string @var{str}
-@defunx tcl-obj-make-string @var{str} @var{str.len}
-Build and return a new @objtype{tcl-obj} object holding a @tcl{}
-representation of @var{general-string}; if an error occurs raise an
-exception.  The arguments @var{str} and @var{str.len} must be a
-generalised C string, @cstringsref{}.
-@end defun
-
-
 @defun tcl-obj-finalise @var{tclobj}
 Finalise @var{tclobj}; return unspecified values.  It is fine to apply
 this function multiple times to the same @var{tclobj} value: the first
@@ -473,6 +464,26 @@ invoking @tclcode{obj delete} upon the objreter.
 The following bindings are exported by the library
 @value{FOREIGN_SCHEME_LIB}.
 
+@c ------------------------------------------------------------------------
+
+@subsubheading String objects
+
+
+@defun tcl-obj-make-string @var{str}
+@defunx tcl-obj-make-string @var{str} @var{str.len}
+Build and return a new @objtype{tcl-obj} object holding a @tcl{}
+representation of @var{general-string}; if an error occurs raise an
+exception.  The arguments @var{str} and @var{str.len} must be a
+generalised C string, @cstringsref{}.
+@end defun
+
+
+@defun string->tcl-obj @var{str}
+Build and return a new @objtype{tcl-obj} object holding a @tcl{}
+representation of @var{str}, which must be a Scheme string; if an error
+occurs raise an exception.
+@end defun
+
 
 @defun tcl-obj->bytevector-string @var{tclobj}
 Return a Scheme bytevector containing the @utf{}-8 representation of
@@ -483,6 +494,39 @@ Return a Scheme bytevector containing the @utf{}-8 representation of
 @defun tcl-obj->string @var{tclobj}
 Return a Scheme string containing the string representation of
 @var{tclobj}.
+@end defun
+
+@c ------------------------------------------------------------------------
+
+@subsubheading Boolean objects
+
+
+@defun tcl-obj->boolean @var{tclobj}
+Return a Scheme boolean representing @var{tclobj} as boolean.
+
+@lisp
+(tcl-obj->boolean (boolean->tcl-obj #t)))       @result{} #t
+(tcl-obj->boolean (boolean->tcl-obj #f)))       @result{} #f
+
+(tcl-obj->boolean (string->tcl-obj "yes")))     @result{} #t
+(tcl-obj->boolean (string->tcl-obj "no")))      @result{} #f
+
+(tcl-obj->boolean (string->tcl-obj "true")))    @result{} #t
+(tcl-obj->boolean (string->tcl-obj "false")))   @result{} #f
+
+(tcl-obj->boolean (string->tcl-obj "on")))      @result{} #t
+(tcl-obj->boolean (string->tcl-obj "off")))     @result{} #f
+
+(tcl-obj->boolean (string->tcl-obj "1")))       @result{} #t
+(tcl-obj->boolean (string->tcl-obj "0")))       @result{} #f
+@end lisp
+@end defun
+
+
+@defun boolean->tcl-obj @var{bool}
+Return a @objtype{tcl-obj} instance representing a boolean value.  If
+@var{bool} is @false{}: the boolean value is false; otherwise it is
+true.
 @end defun
 
 @c page

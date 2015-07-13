@@ -46,9 +46,9 @@
     tcl-interp-eval
 
     ;; tcl obj
-    tcl-obj-pointer-from-general-string
-    tcl-obj-to-bytevector-string
     tcl-obj-finalise
+    tcl-obj-pointer-from-general-string		tcl-obj-to-bytevector-string
+    tcl-obj-pointer-from-boolean		tcl-obj-boolean-to-boolean
 
     ;; event loop
     tcl-do-one-event)
@@ -100,16 +100,26 @@
 
 ;;;; tcl obj struct
 
+(define-syntax-rule (tcl-obj-finalise obj)
+  (foreign-call "ikrt_tcl_obj_finalise" obj))
+
+;;; --------------------------------------------------------------------
+;;; string objects
+
 (define-syntax-rule (tcl-obj-pointer-from-general-string str str.len)
   (foreign-call "ikrt_tcl_obj_pointer_from_general_string" str str.len))
 
-(define-syntax-rule (tcl-obj-to-bytevector-string str)
-  (foreign-call "ikrt_tcl_obj_to_bytevector_string" str))
+(define-syntax-rule (tcl-obj-to-bytevector-string tclobj)
+  (foreign-call "ikrt_tcl_obj_to_bytevector_string" tclobj))
 
 ;;; --------------------------------------------------------------------
+;;; boolean objects
 
-(define-syntax-rule (tcl-obj-finalise obj)
-  (foreign-call "ikrt_tcl_obj_finalise" obj))
+(define-syntax-rule (tcl-obj-pointer-from-boolean bool)
+  (foreign-call "ikrt_tcl_obj_pointer_from_boolean" bool))
+
+(define-syntax-rule (tcl-obj-boolean-to-boolean tclobj)
+  (foreign-call "ikrt_tcl_obj_boolean_to_boolean" tclobj))
 
 
 ;;;; events loop

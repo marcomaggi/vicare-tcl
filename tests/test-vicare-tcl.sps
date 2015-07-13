@@ -273,6 +273,30 @@
 
   (collect 'fullest))
 
+
+(parametrise ((check-test-name		'tcl-objs))
+
+;;; booleans
+
+  (check-for-true	(tcl-obj->boolean (boolean->tcl-obj #t)))
+  (check-for-false	(tcl-obj->boolean (boolean->tcl-obj #f)))
+
+  (check-for-true	(tcl-obj->boolean (string->tcl-obj "yes")))
+  (check-for-false	(tcl-obj->boolean (string->tcl-obj "no")))
+
+  (check-for-true	(tcl-obj->boolean (string->tcl-obj "true")))
+  (check-for-false	(tcl-obj->boolean (string->tcl-obj "false")))
+
+  (check-for-true	(tcl-obj->boolean (string->tcl-obj "on")))
+  (check-for-false	(tcl-obj->boolean (string->tcl-obj "off")))
+
+  (check-for-true	(tcl-obj->boolean (string->tcl-obj "1")))
+  (check-for-false	(tcl-obj->boolean (string->tcl-obj "0")))
+
+  (check		(tcl-obj->string (boolean->tcl-obj #t))		=> "1")
+  (check		(tcl-obj->string (boolean->tcl-obj #f))		=> "0")
+
+  (collect 'fullest))
 
 
 (parametrise ((check-test-name		'scripts))
