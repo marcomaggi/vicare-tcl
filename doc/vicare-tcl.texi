@@ -798,9 +798,32 @@ invoking @tclcode{interp delete} upon the interpreter.
 @end defun
 
 
-@defun tcl-interp-eval @var{interp} @var{script}
-Evaluate the @tcl{} @var{script} in the context of @var{interp}.  The
-argument @var{script} must be a generalised C string, @cstringsref{}.
+@defun tcl-interp-eval @var{interp} @var{script} @var{args}
+@defunx tcl-interp-eval @var{interp} @var{script} @var{script.len} @var{args}
+Evaluate the @tcl{} @var{script} in the context of @var{interp}.  Return
+an instance of @objtype{tcl-obj} representing the result of the
+evaluation.
+
+The arguments @var{script} and @var{script.len} must represent a
+generalised C string, @cstringsref{}.
+
+The argument @var{args} must be a, possibly empty, list of
+@objtype{tcl-obj} instances representing values to append to
+@var{script} before evaluation.
+
+@lisp
+(with-compensations
+  (letrec
+       ((interp (compensate
+                    (tcl-interp-initialise)
+                  (with
+                    (tcl-interp-finalise interp)))))
+    (tcl-interp-eval interp "set a "
+       (list (integer->tcl-obj 123)))
+    (tcl-obj->integer
+       (tcl-interp-eval interp "set a" '()))))
+@result{} 123
+@end lisp
 @end defun
 
 @c page

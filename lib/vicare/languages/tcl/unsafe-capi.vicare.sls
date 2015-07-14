@@ -100,8 +100,8 @@
 
 ;;; --------------------------------------------------------------------
 
-(define-syntax-rule (tcl-interp-eval interp script script.len)
-  (foreign-call "ikrt_tcl_interp_eval" interp script script.len))
+(define-syntax-rule (tcl-interp-eval interp script script.len args)
+  (foreign-call "ikrt_tcl_interp_eval" interp script script.len args))
 
 
 ;;;; tcl obj struct

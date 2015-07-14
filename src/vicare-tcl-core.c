@@ -635,32 +635,56 @@ ikrt_tcl_interp_finalise (ikptr_t s_interp, ikpcb_t * pcb)
 /* ------------------------------------------------------------------ */
 
 ikptr_t
-ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikptr_t s_script_len, ikpcb_t * pcb)
+ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikptr_t s_script_len, ikptr_t s_args, ikpcb_t * pcb)
 {
 #if (defined HAVE_TCL_EVALOBJ)
   Tcl_Interp *	interp = IK_TCL_INTERP(s_interp);
+  /* The Tcl object representing the script. */
   Tcl_Obj *	scriptObj;
+  /* The Scheme result returned to the caller. */
+  ikptr_t	s_result;
+  /* The return value form Tcl  functions.  It is TCL_ERROR is something
+     goes wrong. */
+  int		rv;
   scriptObj = ik_tcl_obj_string_from_general_c_string(s_script, s_script_len);
   Tcl_IncrRefCount(scriptObj);
   {
-    int		rv = Tcl_EvalObj(interp, scriptObj);
-    if (TCL_OK != rv) {
-      ikptr_t	s_error_info	= ika_tcl_interp_get_error_info (pcb, interp);
-      ikptr_t	s_pair;
-      pcb->root0 = &s_error_info;
-      {
-	s_pair = IKA_PAIR_ALLOC(pcb);
-	IK_CAR(s_pair) = IK_FIX(rv);
-	IK_CDR(s_pair) = s_error_info;
+    /* Append script arguments to the script. */
+    {
+      ikuword_t	argc = ik_list_length(s_args);
+      for (ikuword_t i=0; i<argc; ++i) {
+	rv = Tcl_ListObjAppendElement(interp, scriptObj, IK_TCL_OBJ(IK_CAR(s_args)));
+	if (TCL_ERROR == rv) {
+	  goto tcl_error;
+	} else {
+	  s_args = IK_CDR(s_args);
+	}
       }
-      pcb->root0 = NULL;
-      return s_pair;
-    } else {
-      return ika_tcl_interp_get_result(pcb, interp);
+    }
+    /* Evaluate the script. */
+    {
+      rv = Tcl_EvalObj(interp, scriptObj);
+      if (TCL_OK != rv) {
+	goto tcl_error;
+      } else {
+	s_result = ika_tcl_interp_get_result(pcb, interp);
+      }
     }
   }
   Tcl_DecrRefCount(scriptObj);
-  return IK_TRUE;
+  return s_result;
+ tcl_error:
+  {
+    ikptr_t	s_error_info = ika_tcl_interp_get_error_info(pcb, interp);
+    pcb->root0 = &s_error_info;
+    {
+      s_result = IKA_PAIR_ALLOC(pcb);
+      IK_CAR(s_result) = IK_FIX(rv);
+      IK_CDR(s_result) = s_error_info;
+    }
+    pcb->root0 = NULL;
+  }
+  return s_result;
 #else
   feature_failure(__func__);
 #endif

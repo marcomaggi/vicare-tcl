@@ -153,7 +153,7 @@
 (define* (tcl-obj-finalise {obj tcl-obj?})
   ($tcl-obj-finalise obj))
 
-(define-list-of-type-predicate list-of-tcl-objs? tcl-obj?/alive)
+(define-list-of-type-predicate list-of-tcl-objs?/alive tcl-obj?/alive)
 
 ;;; --------------------------------------------------------------------
 ;;; string objects
@@ -272,7 +272,7 @@
 ;;; --------------------------------------------------------------------
 ;;; list objects
 
-(define* (list->tcl-obj {obj list-of-tcl-objs?})
+(define* (list->tcl-obj {obj list-of-tcl-objs?/alive})
   (cond ((capi.tcl-obj-list-pointer-from-list obj)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
@@ -323,13 +323,13 @@
 ;;; --------------------------------------------------------------------
 
 (case-define* tcl-interp-eval
-  ((interp script)
-   (tcl-interp-eval interp script #f))
-  (({interp tcl-interp?/alive} script script.len)
+  ((interp script args)
+   (tcl-interp-eval interp script #f args))
+  (({interp tcl-interp?/alive} script script.len {args list-of-tcl-objs?/alive})
    (assert-general-c-string-and-length __who__ script script.len)
    (with-general-c-strings
        ((script^	script))
-     (let ((rv (capi.tcl-interp-eval interp script^ script.len)))
+     (let ((rv (capi.tcl-interp-eval interp script^ script.len args)))
        (cond ((pointer? rv)
 	      ;;Successful  evaluation  of  the  script.   RV is  a  pointer  to  the
 	      ;;resulting "Tcl_Obj" structure.

@@ -366,14 +366,43 @@
 
 (parametrise ((check-test-name		'scripts))
 
+  (define (doit script)
+    (with-compensations
+      (letrec ((interp (compensate
+			   (tcl-interp-initialise)
+			 (with
+			  (tcl-interp-finalise interp)))))
+	(tcl-interp-eval interp script '()))))
+
+  (check
+      (tcl-obj->string (doit "puts stderr ciao"))
+    => "")
+
+  (check
+      (map tcl-obj->integer (tcl-obj->list (doit "list 1 2 3 4")))
+    => '(1 2 3 4))
+
   (check
       (with-compensations
 	(letrec ((interp (compensate
 			     (tcl-interp-initialise)
 			   (with
 			    (tcl-interp-finalise interp)))))
-	  (tcl-obj->string (tcl-interp-eval interp "puts stderr ciao"))))
-    => "")
+	  (tcl-interp-eval interp "set a 123" '())
+	  (tcl-obj->integer (tcl-interp-eval interp "set a" '()))))
+    => 123)
+
+  ;;Arguments to script.
+  ;;
+  (check
+      (with-compensations
+	(letrec ((interp (compensate
+			     (tcl-interp-initialise)
+			   (with
+			    (tcl-interp-finalise interp)))))
+	  (tcl-interp-eval interp "set a " (list (integer->tcl-obj 123)))
+	  (tcl-obj->integer (tcl-interp-eval interp "set a" '()))))
+    => 123)
 
   (collect 'fullest))
 
