@@ -265,11 +265,9 @@
 	 (error __who__ "unable to create Tcl byte array object" obj))))
 
 (define* (tcl-obj->bytevector {tclobj tcl-obj?/alive})
-  (let ((rv (capi.tcl-obj-bytearray-to-bytevector tclobj)))
-    (if (null? rv)
-	;;TCLOBJ does not represent a byte array.
-	(error __who__ "unable to create byte array representation of Tcl_Obj" tclobj)
-      rv)))
+  (or (capi.tcl-obj-bytearray-to-bytevector tclobj)
+      ;;TCLOBJ does not represent a byte array.
+      (error __who__ "unable to create byte array representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; list objects

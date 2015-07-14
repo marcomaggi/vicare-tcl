@@ -107,8 +107,12 @@ ikrt_tcl_obj_string_pointer_from_general_string (ikptr_t s_str, ikptr_t s_str_le
    the "tcl-obj" struct is finalised. */
 {
   Tcl_Obj *	objPtr = ik_tcl_obj_string_from_general_c_string(s_str, s_str_len);
-  Tcl_IncrRefCount(objPtr);
-  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
 }
 ikptr_t
 ikrt_tcl_obj_string_to_bytevector_string (ikptr_t s_obj, ikpcb_t * pcb)
@@ -152,8 +156,12 @@ ikrt_tcl_obj_boolean_pointer_from_boolean (ikptr_t s_bool, ikpcb_t * pcb)
    the "tcl-obj" struct is finalised. */
 {
   Tcl_Obj *	objPtr = ik_tcl_obj_boolean_from_boolean(s_bool);
-  Tcl_IncrRefCount(objPtr);
-  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
 }
 ikptr_t
 ikrt_tcl_obj_boolean_to_boolean (ikptr_t s_obj, ikpcb_t * pcb)
@@ -197,8 +205,12 @@ ikrt_tcl_obj_int_pointer_from_integer (ikptr_t s_obj, ikpcb_t * pcb)
    the "tcl-obj" struct is finalised. */
 {
   Tcl_Obj *	objPtr = ik_tcl_obj_integer_from_integer(s_obj);
-  Tcl_IncrRefCount(objPtr);
-  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
 }
 ikptr_t
 ikrt_tcl_obj_int_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
@@ -242,8 +254,12 @@ ikrt_tcl_obj_long_pointer_from_integer (ikptr_t s_obj, ikpcb_t * pcb)
    the "tcl-obj" struct is finalised. */
 {
   Tcl_Obj *	objPtr = ik_tcl_obj_long_from_integer(s_obj);
-  Tcl_IncrRefCount(objPtr);
-  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
 }
 ikptr_t
 ikrt_tcl_obj_long_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
@@ -288,8 +304,12 @@ ikrt_tcl_obj_wide_int_pointer_from_integer (ikptr_t s_obj, ikpcb_t * pcb)
    the "tcl-obj" struct is finalised. */
 {
   Tcl_Obj *	objPtr = ik_tcl_obj_wide_from_integer(s_obj);
-  Tcl_IncrRefCount(objPtr);
-  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
 }
 ikptr_t
 ikrt_tcl_obj_wide_int_to_integer (ikptr_t s_obj, ikpcb_t * pcb)
@@ -333,8 +353,12 @@ ikrt_tcl_obj_double_pointer_from_flonum (ikptr_t s_obj, ikpcb_t * pcb)
    the "tcl-obj" struct is finalised. */
 {
   Tcl_Obj *	objPtr = ik_tcl_obj_double_from_flonum(s_obj);
-  Tcl_IncrRefCount(objPtr);
-  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
 }
 ikptr_t
 ikrt_tcl_obj_double_to_flonum (ikptr_t s_obj, ikpcb_t * pcb)
@@ -378,8 +402,12 @@ ikrt_tcl_obj_bytearray_pointer_from_bytevector (ikptr_t s_obj, ikpcb_t * pcb)
    the "tcl-obj" struct is finalised. */
 {
   Tcl_Obj *	objPtr = ik_tcl_obj_bytearray_from_bytevector(s_obj);
-  Tcl_IncrRefCount(objPtr);
-  return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
 }
 ikptr_t
 ikrt_tcl_obj_bytearray_to_bytevector (ikptr_t s_obj, ikpcb_t * pcb)
@@ -404,20 +432,22 @@ ik_tcl_obj_list_from_list (ikptr_t s_obj)
    conversion is  successful: return  a pointer to  "Tcl_Obj"; otherwise
    return NULL. */
 {
+  Tcl_Obj *	listObj;
+  if (0) ik_debug_message("%s enter", __func__);
   ikuword_t	objc = ik_list_length(s_obj);
   /* Arbitrary limit to list length. */
   if (IK_TCL_MAX_TCL_LIST_LENGTH <= objc) {
-    return NULL;
+    listObj = NULL;
   } else {
-    Tcl_Obj *	listObj;
     Tcl_Obj *	objv[objc];
     for (ikuword_t i=0; i<objc; ++i) {
       objv[i] = IK_TCL_OBJ(IK_CAR(s_obj));
       s_obj   = IK_CDR(s_obj);
     }
     listObj = Tcl_NewListObj(objc, objv);
-    return listObj;
   }
+  if (0) ik_debug_message("%s leave", __func__);
+  return listObj;
 }
 static ikptr_t
 ika_tcl_obj_list_to_list (ikpcb_t * pcb, Tcl_Obj * objPtr)
@@ -427,15 +457,17 @@ ika_tcl_obj_list_to_list (ikpcb_t * pcb, Tcl_Obj * objPtr)
 
    Makes use of the PCB fields "root8" and "root9". */
 {
+  ikptr_t	s_list;
+  if (0) ik_debug_message("%s enter", __func__);
   int		objc;
   Tcl_Obj **	objv;
   if (TCL_ERROR == Tcl_ListObjGetElements(NULL, objPtr, &objc, &objv)) {
-    return IK_FALSE;
+    s_list = IK_FALSE;
   } else if (!objc) {
-    return IK_NULL;
+    s_list = IK_NULL;
   } else {
-    ikptr_t	s_list, s_spine;
-    s_spine = s_list = ika_pair_alloc(pcb);
+    ikptr_t	s_spine;
+    s_list = s_spine = ika_pair_alloc(pcb);
     pcb->root9 = &s_list;
     pcb->root8 = &s_spine;
     {
@@ -454,8 +486,9 @@ ika_tcl_obj_list_to_list (ikpcb_t * pcb, Tcl_Obj * objPtr)
     }
     pcb->root8 = NULL;
     pcb->root9 = NULL;
-    return s_list;
   }
+  if (0) ik_debug_message("%s leave", __func__);
+  return s_list;
 }
 
 /* ------------------------------------------------------------------ */
