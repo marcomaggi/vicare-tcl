@@ -608,6 +608,33 @@ Return a @objtype{tcl-obj} instance representing a byte array.
 @var{obj} must be a bytevector.
 @end defun
 
+@c ------------------------------------------------------------------------
+
+@subsubheading List objects
+
+
+Here is an example of list conversion:
+
+@lisp
+(map tcl-obj->integer
+  (tcl-obj->list
+    (list->tcl-obj
+      (map integer->tcl-obj '(1 2 3 4)))))
+@result{} (1 2 3 4)
+@end lisp
+
+
+@defun tcl-obj->list @var{tclobj}
+Return a, possibly empty, Scheme list of @objtype{tcl-obj} instances as
+representation of @var{tclobj}, which must be a @tcl{} list.
+@end defun
+
+
+@defun list->tcl-obj @var{obj}
+Given a Scheme list of @objtype{tcl-obj} instances: return a
+@objtype{tcl-obj} instance representing a list with the same items.
+@end defun
+
 @c page
 @node plain interp
 @section Interp objects

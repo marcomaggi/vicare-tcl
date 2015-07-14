@@ -47,32 +47,6 @@ ikrt_tcl_global_initialisation (ikptr_t s_executable, ikpcb_t * pcb)
 
 
 /** --------------------------------------------------------------------
- ** Tcl/Scheme objects conversion.
- ** ----------------------------------------------------------------- */
-
-
-/* ------------------------------------------------------------------ */
-
-#if 0
-static Tcl_Obj *
-scm_bytevector_to_tcl_string (ikptr_t s_bv)
-{
-  ikuword_t	len	= IK_BYTEVECTOR_LENGTH(s_bv);
-  const char *	str	= IK_BYTEVECTOR_DATA_CHARP(s_bv);
-  return Tcl_NewStringObj(str, (int)len);
-}
-static ikptr_t
-scm_bytevector_from_tcl_string (ikpcb_t * pcb, Tcl_Obj * stringObj)
-{
-  int		len;
-  const char *	str;
-  str = Tcl_GetStringFromObj(stringObj, &len);
-  return ika_bytevector_from_cstring_len(pcb, str, len);
-}
-#endif
-
-
-/** --------------------------------------------------------------------
  ** Tcl_Obj struct: finalisation.
  ** ----------------------------------------------------------------- */
 
@@ -205,7 +179,7 @@ ika_tcl_obj_integer_to_integer (ikpcb_t * pcb, Tcl_Obj * objPtr)
 {
   int	result;
   if (TCL_ERROR == Tcl_GetIntFromObj(NULL, objPtr, &result)) {
-    return IK_NULL;
+    return IK_FALSE;
   } else {
     return ika_integer_from_int(pcb, result);
   }
@@ -250,7 +224,7 @@ ika_tcl_obj_long_to_integer (ikpcb_t * pcb, Tcl_Obj * objPtr)
 {
   long	result;
   if (TCL_ERROR == Tcl_GetLongFromObj(NULL, objPtr, &result)) {
-    return IK_NULL;
+    return IK_FALSE;
   } else {
     return ika_integer_from_long(pcb, result);
   }
@@ -295,7 +269,7 @@ ika_tcl_obj_wide_to_integer (ikpcb_t * pcb, Tcl_Obj * objPtr)
 {
   Tcl_WideInt	result;
   if (TCL_ERROR == Tcl_GetWideIntFromObj(NULL, objPtr, &result)) {
-    return IK_NULL;
+    return IK_FALSE;
   } else {
     return ika_integer_from_sint64(pcb, (int64_t)result);
   }
@@ -341,7 +315,7 @@ ika_tcl_obj_double_to_flonum (ikpcb_t * pcb, Tcl_Obj * objPtr)
 {
   double	result;
   if (TCL_ERROR == Tcl_GetDoubleFromObj(NULL, objPtr, &result)) {
-    return IK_NULL;
+    return IK_FALSE;
   } else {
     return ika_flonum_from_double(pcb, result);
   }
@@ -414,6 +388,101 @@ ikrt_tcl_obj_bytearray_to_bytevector (ikptr_t s_obj, ikpcb_t * pcb)
    "tcl-obj" Scheme struct representing a byte array. */
 {
   return ika_tcl_obj_bytearray_to_bytevector(pcb, IK_TCL_OBJ(s_obj));
+}
+
+
+/** --------------------------------------------------------------------
+ ** Tcl_Obj struct: list.
+ ** ----------------------------------------------------------------- */
+
+#undef IK_TCL_MAX_TCL_LIST_LENGTH
+#define IK_TCL_MAX_TCL_LIST_LENGTH		1024
+
+static Tcl_Obj *
+ik_tcl_obj_list_from_list (ikptr_t s_obj)
+/* Convert a Scheme  list of "tcl-obj" structs into a  TCL list.  If the
+   conversion is  successful: return  a pointer to  "Tcl_Obj"; otherwise
+   return NULL. */
+{
+  ikuword_t	objc = ik_list_length(s_obj);
+  /* Arbitrary limit to list length. */
+  if (IK_TCL_MAX_TCL_LIST_LENGTH <= objc) {
+    return NULL;
+  } else {
+    Tcl_Obj *	listObj;
+    Tcl_Obj *	objv[objc];
+    for (ikuword_t i=0; i<objc; ++i) {
+      objv[i] = IK_TCL_OBJ(IK_CAR(s_obj));
+      s_obj   = IK_CDR(s_obj);
+    }
+    listObj = Tcl_NewListObj(objc, objv);
+    return listObj;
+  }
+}
+static ikptr_t
+ika_tcl_obj_list_to_list (ikpcb_t * pcb, Tcl_Obj * objPtr)
+/* Convert a TCL  list into a Scheme list of  pointers to "Tcl_Obj".  If
+   the conversion  is successful: return  null or a proper  list object;
+   otherwise return the Scheme false object.
+
+   Makes use of the PCB fields "root8" and "root9". */
+{
+  int		objc;
+  Tcl_Obj **	objv;
+  if (TCL_ERROR == Tcl_ListObjGetElements(NULL, objPtr, &objc, &objv)) {
+    return IK_FALSE;
+  } else if (!objc) {
+    return IK_NULL;
+  } else {
+    ikptr_t	s_list, s_spine;
+    s_spine = s_list = ika_pair_alloc(pcb);
+    pcb->root9 = &s_list;
+    pcb->root8 = &s_spine;
+    {
+      for (int i=0; i<objc;) {
+	IK_ASS(IK_CAR(s_spine), ika_pointer_alloc(pcb, (ikuword_t)objv[i]));
+	ik_signal_dirt_in_page_of_pointer(pcb, (ikptr_t)IK_CAR_PTR(s_spine));
+	if (++i < objc) {
+	  IK_ASS(IK_CDR(s_spine), ika_pair_alloc(pcb));
+	  ik_signal_dirt_in_page_of_pointer(pcb, (ikptr_t)IK_CDR_PTR(s_spine));
+	  s_spine = IK_CDR(s_spine);
+	} else {
+	  IK_CDR(s_spine) = IK_NULL;
+	  break;
+	}
+      }
+    }
+    pcb->root8 = NULL;
+    pcb->root9 = NULL;
+    return s_list;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+
+ikptr_t
+ikrt_tcl_obj_list_pointer_from_list (ikptr_t s_obj, ikpcb_t * pcb)
+/* Build a new "Tcl_Obj" representing a list initialised from S_OBJ.
+
+   This  function  is called  from  a  constructor of  "tcl-obj"  Scheme
+   struct; it must  make sure that the "Tcl_Obj" is  not finalised until
+   the "tcl-obj" struct is finalised. */
+{
+  Tcl_Obj *	objPtr = ik_tcl_obj_list_from_list(s_obj);
+  if (objPtr) {
+    Tcl_IncrRefCount(objPtr);
+    return ika_pointer_alloc(pcb, (ikuword_t)objPtr);
+  } else {
+    return IK_FALSE;
+  }
+}
+ikptr_t
+ikrt_tcl_obj_list_to_list (ikptr_t s_obj, ikpcb_t * pcb)
+/* Return a new Scheme list  object containing the representation of the
+   "Tcl_Obj" referenced by S_OBJ, which must be an instance of "tcl-obj"
+   Scheme struct representing a list. */
+{
+  return ika_tcl_obj_list_to_list(pcb, IK_TCL_OBJ(s_obj));
 }
 
 

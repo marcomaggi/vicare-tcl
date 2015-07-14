@@ -351,6 +351,16 @@
   (check (tcl-obj->bytevector (bytevector->tcl-obj '#vu8()))		=> '#vu8())
   (check (tcl-obj->bytevector (bytevector->tcl-obj '#vu8(1 2 3 4)))	=> '#vu8(1 2 3 4))
 
+;;; --------------------------------------------------------------------
+;;; lists
+
+  (check (tcl-obj->list (list->tcl-obj '()))		=> '())
+
+  (check
+      (map tcl-obj->integer
+	(tcl-obj->list (list->tcl-obj (map integer->tcl-obj '(1 2 3 4)))))
+    => '(1 2 3 4))
+
   (collect 'fullest))
 
 

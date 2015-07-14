@@ -58,6 +58,7 @@
     wide-int->tcl-obj			tcl-obj->wide-int
     flonum->tcl-obj			tcl-obj->flonum
     bytevector->tcl-obj			tcl-obj->bytevector
+    list->tcl-obj			tcl-obj->list
 
     ;; tcl interp struct
     tcl-interp-initialise
@@ -87,7 +88,9 @@
     (prefix (vicare ffi foreign-pointer-wrapper) ffi.)
     (vicare arguments general-c-buffers)
     (vicare language-extensions c-enumerations)
-    (prefix (vicare platform words) words.))
+    (prefix (vicare platform words) words.)
+    (only (vicare language-extensions syntaxes)
+	  define-list-of-type-predicate))
 
 
 ;;;; arguments validation
@@ -150,6 +153,8 @@
 (define* (tcl-obj-finalise {obj tcl-obj?})
   ($tcl-obj-finalise obj))
 
+(define-list-of-type-predicate list-of-tcl-objs? tcl-obj?/alive)
+
 ;;; --------------------------------------------------------------------
 ;;; string objects
 
@@ -200,11 +205,9 @@
 	 (error __who__ "unable to create Tcl \"signed int\" object" obj))))
 
 (define* (tcl-obj->integer {tclobj tcl-obj?/alive})
-  (let ((rv (capi.tcl-obj-int-to-integer tclobj)))
-    (if (null? rv)
-	;;TCLOBJ does not represent a integer.
-	(error __who__ "unable to create \"signed int\" representation of Tcl_Obj" tclobj)
-      rv)))
+  (or (capi.tcl-obj-int-to-integer tclobj)
+      ;;TCLOBJ does not represent a integer.
+      (error __who__ "unable to create \"signed int\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; long objects
@@ -217,11 +220,9 @@
 	 (error __who__ "unable to create Tcl \"singed long\" object" obj))))
 
 (define* (tcl-obj->long {tclobj tcl-obj?/alive})
-  (let ((rv (capi.tcl-obj-long-to-integer tclobj)))
-    (if (null? rv)
-	;;TCLOBJ does not represent a long.
-	(error __who__ "unable to create \"signed long\" representation of Tcl_Obj" tclobj)
-      rv)))
+  (or (capi.tcl-obj-long-to-integer tclobj)
+      ;;TCLOBJ does not represent a long.
+      (error __who__ "unable to create \"signed long\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; wide objects
@@ -234,11 +235,9 @@
 	 (error __who__ "unable to create Tcl \"Tcl_WideInt\" object" obj))))
 
 (define* (tcl-obj->wide-int {tclobj tcl-obj?/alive})
-  (let ((rv (capi.tcl-obj-wide-int-to-integer tclobj)))
-    (if (null? rv)
-	;;TCLOBJ does not represent a wide.
-	(error __who__ "unable to create \"Tcl_WideInt\" representation of Tcl_Obj" tclobj)
-      rv)))
+  (or (capi.tcl-obj-wide-int-to-integer tclobj)
+      ;;TCLOBJ does not represent a wide int.
+      (error __who__ "unable to create \"Tcl_WideInt\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; double objects
@@ -251,11 +250,9 @@
 	 (error __who__ "unable to create Tcl \"double\" object" obj))))
 
 (define* (tcl-obj->flonum {tclobj tcl-obj?/alive})
-  (let ((rv (capi.tcl-obj-double-to-flonum tclobj)))
-    (if (null? rv)
-	;;TCLOBJ does not represent a flonum.
-	(error __who__ "unable to create \"double\" representation of Tcl_Obj" tclobj)
-      rv)))
+  (or (capi.tcl-obj-double-to-flonum tclobj)
+      ;;TCLOBJ does not represent a flonum.
+      (error __who__ "unable to create \"double\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; bytearray objects
@@ -273,6 +270,27 @@
 	;;TCLOBJ does not represent a byte array.
 	(error __who__ "unable to create byte array representation of Tcl_Obj" tclobj)
       rv)))
+
+;;; --------------------------------------------------------------------
+;;; list objects
+
+(define* (list->tcl-obj {obj list-of-tcl-objs?})
+  (cond ((capi.tcl-obj-list-pointer-from-list obj)
+	 => (lambda (rv)
+	      (make-tcl-obj/owner rv)))
+	(else
+	 (error __who__ "unable to create Tcl list object" obj))))
+
+(define* (tcl-obj->list {tclobj tcl-obj?/alive})
+  (cond ((capi.tcl-obj-list-to-list tclobj)
+	 => (lambda (rv)
+	      ;;RV is a list of pointers to "Tcl_Obj".
+	      (map (lambda (item)
+		     (make-tcl-obj/owner item))
+		rv)))
+	(else
+	 ;;TCLOBJ does not represent a list.
+	 (error __who__ "unable to create list representation of Tcl_Obj" tclobj))))
 
 
 ;;;; data structures: tcl-interp
