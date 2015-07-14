@@ -647,31 +647,33 @@ ikrt_tcl_interp_eval (ikptr_t s_interp, ikptr_t s_script, ikptr_t s_script_len, 
      goes wrong. */
   int		rv;
   scriptObj = ik_tcl_obj_string_from_general_c_string(s_script, s_script_len);
-  Tcl_IncrRefCount(scriptObj);
-  {
-    /* Append script arguments to the script. */
-    {
-      ikuword_t	argc = ik_list_length(s_args);
-      for (ikuword_t i=0; i<argc; ++i) {
-	rv = Tcl_ListObjAppendElement(interp, scriptObj, IK_TCL_OBJ(IK_CAR(s_args)));
-	if (TCL_ERROR == rv) {
-	  goto tcl_error;
-	} else {
-	  s_args = IK_CDR(s_args);
-	}
-      }
+  /* Append script arguments to the script. */
+  if (IK_NULL != s_args) {
+    ikuword_t	argc = ik_list_length(s_args);
+    /* We are  going to  append elements to  the list  representation of
+       "scriptObj";  this means  we mutate  it;  this means  we have  to
+       duplicated it if it is shared. */
+    if (Tcl_IsShared(scriptObj)) {
+      scriptObj = Tcl_DuplicateObj(scriptObj);
     }
-    /* Evaluate the script. */
-    {
-      rv = Tcl_EvalObj(interp, scriptObj);
-      if (TCL_OK != rv) {
+    for (ikuword_t i=0; i<argc; ++i) {
+      rv = Tcl_ListObjAppendElement(interp, scriptObj, IK_TCL_OBJ(IK_CAR(s_args)));
+      if (TCL_ERROR == rv) {
 	goto tcl_error;
       } else {
-	s_result = ika_tcl_interp_get_result(pcb, interp);
+	s_args = IK_CDR(s_args);
       }
     }
   }
-  Tcl_DecrRefCount(scriptObj);
+  /* Evaluate the script. */
+  {
+    rv = Tcl_EvalObj(interp, scriptObj);
+    if (TCL_OK != rv) {
+      goto tcl_error;
+    } else {
+      s_result = ika_tcl_interp_get_result(pcb, interp);
+    }
+  }
   return s_result;
  tcl_error:
   {
