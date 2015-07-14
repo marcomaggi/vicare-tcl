@@ -84,15 +84,21 @@ vwait X")))
 
 ;;This makes use of TCL-DO-ONE-EVENT.
 ;;
-#;(begin
+(internal-body
 
-  (with-compensations
+  (define (mkinterp/c)
     (letrec ((interp (compensate
 			 (tcl-interp-initialise)
 		       (with
 			(tcl-interp-finalise interp)))))
+      interp))
+
+  (with-compensations
+    (let ((interp (mkinterp/c)))
       (tcl-interp-eval interp "
 package require Tk
+wm title . Demo
+wm geometry . 200x100+10+10
 button .b -text Ok -command cmd
 bind .b <Return> cmd
 pack .b
@@ -102,8 +108,11 @@ proc cmd {} {
 }
 set X 0
 focus .b
+tkwait visibility .b
 ")
-      (tcl-do-one-event (tcl-events window))))
+      (while (tcl-do-one-event (tcl-events all idle))
+	(when (tcl-obj->boolean (tcl-interp-eval interp "set X"))
+	  (break)))))
 
   (void))
 

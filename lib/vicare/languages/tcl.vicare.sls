@@ -323,6 +323,8 @@
 ;;; --------------------------------------------------------------------
 
 (case-define* tcl-interp-eval
+  ((interp script)
+   (tcl-interp-eval interp script #f '()))
   ((interp script args)
    (tcl-interp-eval interp script #f args))
   (({interp tcl-interp?/alive} script script.len {args list-of-tcl-objs?/alive})
