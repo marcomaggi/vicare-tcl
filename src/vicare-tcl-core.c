@@ -444,6 +444,8 @@ ik_tcl_obj_list_from_list (ikptr_t s_obj)
       objv[i] = IK_TCL_OBJ(IK_CAR(s_obj));
       s_obj   = IK_CDR(s_obj);
     }
+    /* This call  to "Tcl_NewListObj()"  takes care of  incrementing the
+       reference counter of the "Tcl_Obj" structures in "objv". */
     listObj = Tcl_NewListObj(objc, objv);
   }
   if (0) ik_debug_message("%s leave", __func__);
@@ -472,6 +474,11 @@ ika_tcl_obj_list_to_list (ikpcb_t * pcb, Tcl_Obj * objPtr)
     pcb->root8 = &s_spine;
     {
       for (int i=0; i<objc;) {
+	/* We allocate a Scheme pointer object referencing the "Tcl_Obj"
+	   in  "objv[i]"; this  pointer object  will go  in a  "tcl-obj"
+	   Scheme struct.   We have  to increment the  reference counter
+	   here. */
+	Tcl_IncrRefCount(objv[i]);
 	IK_ASS(IK_CAR(s_spine), ika_pointer_alloc(pcb, (ikuword_t)objv[i]));
 	ik_signal_dirt_in_page_of_pointer(pcb, (ikptr_t)IK_CAR_PTR(s_spine));
 	if (++i < objc) {
