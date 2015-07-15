@@ -108,7 +108,7 @@
 ;;;; condition object types
 
 (define-condition-type &tcl-conversion
-    &error
+    &assertion
   make-tcl-conversion-error
   tcl-conversion-error?
   (value	tcl-conversion-error.value))

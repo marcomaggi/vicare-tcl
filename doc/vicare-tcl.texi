@@ -318,7 +318,7 @@ number is the value of the C language preprocessor symbol
 
 @deftp {Condition Object Type} &tcl-conversion
 Used to signal a conversion error between a @tcl{} object and a Scheme
-object; it is derived from @condition{error}.  It has the following
+object; it is derived from @condition{assertion}.  It has the following
 fields:
 
 @table @code
