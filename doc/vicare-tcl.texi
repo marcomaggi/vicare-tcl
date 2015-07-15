@@ -359,7 +359,6 @@ Accessor for the field of condition objects of type
 @condition{tcl-conversion}.
 @end defun
 
-
 @c page
 @node plain conditions evaluation
 @subsection Signalling evaluation errors
