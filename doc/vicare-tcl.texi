@@ -316,6 +316,20 @@ number is the value of the C language preprocessor symbol
 @section Condition object types
 
 
+@menu
+* plain conditions conversion:: Signalling conversion errors.
+* plain conditions evaluation:: Signalling evaluation errors.
+@end menu
+
+@c page
+@node plain conditions conversion
+@subsection Signalling conversion errors
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
 @deftp {Condition Object Type} &tcl-conversion
 Used to signal a conversion error between a @tcl{} object and a Scheme
 object; it is derived from @condition{assertion}.  It has the following
@@ -343,6 +357,54 @@ Return @true{} if @var{obj} is a condition object of type
 @defun tcl-conversion-error.value @var{cnd}
 Accessor for the field of condition objects of type
 @condition{tcl-conversion}.
+@end defun
+
+
+@c page
+@node plain conditions evaluation
+@subsection Signalling evaluation errors
+
+
+The following bindings are exported by the library
+@value{FOREIGN_SCHEME_LIB}.
+
+
+@deftp {Condition Object Type} &tcl-evaluation
+Used to signal an error evaluating a @tcl{} script in the context of a
+@tcl{} interpreter; it is derived from @condition{error}.  It has the
+following fields:
+
+@table @code
+@item interp
+The instance of @objtype{tcl-interp} in which the error occurred.
+
+@item script
+The script that raised the error.
+
+@item args
+Null or a list of @objtype{tcl-obj} instances representing arguments
+appended to the script before evaluation.
+@end table
+@end deftp
+
+
+@defun make-tcl-evaluation-error @var{value}
+Build and return a new condition object of type
+@condition{tcl-evaluation}.
+@end defun
+
+
+@defun tcl-evaluation-error? @var{obj}
+Return @true{} if @var{obj} is a condition object of type
+@condition{tcl-evaluation}; otherwise return @false{}.
+@end defun
+
+
+@defun tcl-evaluation-error.interp @var{cnd}
+@defunx tcl-evaluation-error.script @var{cnd}
+@defunx tcl-evaluation-error.args @var{cnd}
+Accessor for the field of condition objects of type
+@condition{tcl-evaluation}.
 @end defun
 
 @c page

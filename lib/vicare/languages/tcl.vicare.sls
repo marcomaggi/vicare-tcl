@@ -47,6 +47,13 @@
     tcl-conversion-error?
     tcl-conversion-error.value
 
+    &tcl-evaluation
+    make-tcl-evaluation-error
+    tcl-evaluation-error?
+    tcl-evaluation-error.interp
+    tcl-evaluation-error.script
+    tcl-evaluation-error.args
+
     ;; tcl obj
     tcl-obj-finalise
     tcl-obj?
@@ -120,6 +127,22 @@
 	      (make-message-condition message)
 	      (make-irritants-condition irritants))))
 
+;;; --------------------------------------------------------------------
+
+(define-condition-type &tcl-evaluation
+    &error
+  make-tcl-evaluation-error
+  tcl-evaluation-error?
+  (interp	tcl-evaluation-error.interp)
+  (script	tcl-evaluation-error.script)
+  (args		tcl-evaluation-error.args))
+
+(define (raise-tcl-evaluation-error who message interp script args . irritants)
+  (raise
+   (condition (make-tcl-evaluation-error interp script args)
+	      (make-who-condition who)
+	      (make-message-condition message)
+	      (make-irritants-condition irritants))))
 
 ;;;; version functions
 
@@ -385,7 +408,9 @@
 	      ;;An error occurred.  The car of RV is a fixnum representing the return
 	      ;;value of "Tcl_EvalObj()".  The cdr of RV is a bytevector representing
 	      ;;the TCL stack trace of the error.
-	      (error __who__ (ascii->string (cdr rv)) interp script))
+	      (raise-tcl-evaluation-error __who__
+		(ascii->string (cdr rv))
+		interp script args))
 	     (else
 	      (assertion-violation __who__
 		"invalid return value from" rv)))))))
@@ -421,4 +446,5 @@
 ;; Local Variables:
 ;; eval: (put 'ffi.define-foreign-pointer-wrapper	'scheme-indent-function 1)
 ;; eval: (put 'raise-tcl-conversion-error		'scheme-indent-function 1)
+;; eval: (put 'raise-tcl-evaluation-error		'scheme-indent-function 1)
 ;; End:
