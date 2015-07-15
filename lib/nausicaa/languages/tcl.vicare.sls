@@ -38,9 +38,66 @@
 
     ;; label
     <tcl-interp>
+    <tcl-obj>
     )
   (import (nausicaa)
     (vicare languages tcl))
+
+
+;;;; label wrapper for struct "tcl-obj"
+
+(define-label <tcl-obj>
+  (predicate tcl-obj?)
+  (protocol (lambda ()
+	      (lambda (obj)
+		(cond ((exact-integer? obj)
+		       (wide-int->tcl-obj obj))
+		      ((flonum? obj)
+		       (flonum->tcl-obj obj))
+		      ((string? obj)
+		       (string->tcl-obj obj))
+		      ((bytevector? obj)
+		       (bytevector->tcl-obj obj))
+		      ((list? obj)
+		       (list->tcl-obj obj))
+		      ((boolean? obj)
+		       (boolean->tcl-obj obj))
+		      (else
+		       (procedure-argument-violation '<tcl-obj>
+			 "invalid constructor argument" obj))))))
+
+;;; common objects stuff
+
+  (virtual-fields
+   (mutable {destructor <procedure>}
+	    tcl-obj-custom-destructor
+	    set-tcl-obj-custom-destructor!))
+
+  (methods
+   (alive?		tcl-obj?/alive)
+   (finalise		tcl-obj-finalise)
+
+   (putprop		tcl-obj-putprop)
+   (getprop		tcl-obj-getprop)
+   (remprop		tcl-obj-remprop)
+   (property-list	tcl-obj-property-list)
+
+   (hash		tcl-obj-hash))
+
+;;;
+
+  (methods
+   (boolean		tcl-obj->boolean)
+   (integer		tcl-obj->integer)
+   (wide-int		tcl-obj->wide-int)
+   (long		tcl-obj->long)
+   (flonum		tcl-obj->flonum)
+   (string		tcl-obj->string)
+   (utf8		tcl-obj->utf8)
+   (bytevector		tcl-obj->bytevector)
+   (list		tcl-obj->list))
+
+  #| end of label |# )
 
 
 ;;;; label wrapper for struct "tcl-interp"
@@ -68,6 +125,9 @@
    (hash		tcl-interp-hash))
 
 ;;;
+
+  (methods
+   (eval		tcl-interp-eval))
 
   #| end of label |# )
 

@@ -18,9 +18,10 @@ fi
     --libdir="${libdir}"			\
     --enable-debug                              \
     --enable-time-tests				\
-    --with-nausicaa				\
     CFLAGS='-O3'				\
     VFLAGS='-O3'				\
     "$@"
+
+#    --with-nausicaa
 
 ### end of file
