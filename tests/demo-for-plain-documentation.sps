@@ -67,18 +67,18 @@
 			 (tcl-interp-initialise)
 		       (with
 			(tcl-interp-finalise interp)))))
-      (tcl-interp-eval interp "
-package require Tk
-button .b -text Ok -command cmd
-bind .b <Return> cmd
-pack .b
-proc cmd {} {
-   global X
-   set X 1
-}
-set X 0
-focus .b
-vwait X")))
+      (tcl-interp-eval interp
+	"package require Tk
+         button .b -text Ok -command cmd
+         bind .b <Return> cmd
+         pack .b
+         proc cmd {} {
+            global X
+            set X 1
+         }
+         set X 0
+         focus .b
+         vwait X")))
 
   (void))
 
@@ -95,21 +95,20 @@ vwait X")))
 
   (with-compensations
     (let ((interp (mkinterp/c)))
-      (tcl-interp-eval interp "
-package require Tk
-wm title . Demo
-wm geometry . 200x100+10+10
-button .b -text Ok -command cmd
-bind .b <Return> cmd
-pack .b
-proc cmd {} {
-   global X
-   set X 1
-}
-set X 0
-focus .b
-tkwait visibility .b
-")
+      (tcl-interp-eval interp
+	"package require Tk
+         wm title . Demo
+         wm geometry . 200x100+10+10
+         button .b -text Ok -command cmd
+         bind .b <Return> cmd
+         pack .b
+         proc cmd {} {
+            global X
+            set X 1
+         }
+         set X 0
+         focus .b
+         tkwait visibility .b")
       (while (tcl-do-one-event (tcl-events all idle))
 	(when (tcl-obj->boolean (tcl-interp-eval interp "set X"))
 	  (break)))))
@@ -121,3 +120,6 @@ tkwait visibility .b
 
 
 ;;; end of file
+;; Local Variables:
+;; eval: (put 'tcl-interp-eval 'scheme-indent-function 1)
+;; End:

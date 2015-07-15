@@ -259,7 +259,7 @@ for @value{FOREIGN_PACKAGE}.
 * plain conditions::            Condition object types.
 * plain obj::                   @tcl{} objects.
 * plain interp::                @tcl{} interpreter objects.
-* plain misc::                  Miscellaneous operations.
+* plain events::                Entering the events loop.
 @end menu
 
 @c page
@@ -874,8 +874,37 @@ The argument @var{args} must be a, possibly empty, list of
 @end defun
 
 @c page
-@node plain misc
-@section Miscellaneous operations
+@node plain events
+@section Entering the events loop
+
+
+The events loop is one of the most interesting features of @tcl{} and
+its use is mandatory when using the graphics toolkit @tk{}.  For
+example: procedures that update the @tk{} @gui{} (redrawing buttons when
+pressed, displaying menus, and similar) are enqueued in the events loop
+as ``idle'' events.
+
+For details on the events loop we should read:
+
+@itemize
+@item
+The manual pages of the @tcl{} commands: @manpage{update,
+@tclcmd{update}}, @manpage{vwait, @tclcmd{vwait}}, @manpage{tkwait,
+@tclcmd{tkwait}}.
+
+@item
+The manual pages of the C language @tcl{} functions:
+@manpage{Tcl_DoOneEvent, Tcl_DoOneEvent}, @manpage{Tcl_DoWhenIdle,
+Tcl_DoWhenIdle}.
+@end itemize
+
+@menu
+* plain events api::            Events loop programming interface.
+@end menu
+
+@c page
+@node plain events api
+@subsection Events loop programming interface
 
 
 The following bindings are exported by the library
@@ -905,16 +934,52 @@ TCL_TIMER_EVENTS        TCL_WINDOW_EVENTS
 
 
 @defun tcl-do-one-event @var{events-set}
-Process the next event enqueued in the @tcl{} event loop.  To understand
-what exactly this procedure does, read the @cfunc{Tcl_DoOneEvent} manual
-page.
-
-This function returns @true{} if some event was processed, else returns
-@false{} (if the queue is empty).
+Process the next event enqueued in the @tcl{} event loop.  Return
+@true{} if at least one event was processed; else return @false{} (if
+the queue is empty).
 
 @var{events-set} must be a value returned by the syntax
 @syntax{tcl-events} representing an events selection value.
+
+To understand what exactly this procedure does, read the
+@cfunc{Tcl_DoOneEvent} manual page.
 @end defun
+
+
+As example, the following program: creates a @tk{} window with a button
+in it then enters the events loop until the button is pressed.
+
+@lisp
+(import (vicare)
+  (vicare languages tcl))
+
+(define (mkinterp/c)
+  (letrec ((interp (compensate
+                       (tcl-interp-initialise)
+                     (with
+                      (tcl-interp-finalise interp)))))
+    interp))
+
+(with-compensations
+  (let ((interp (mkinterp/c)))
+    (tcl-interp-eval interp
+      "package require Tk
+       wm title . Demo
+       wm geometry . 200x100+10+10
+       button .b -text Ok -command cmd
+       bind .b <Return> cmd
+       pack .b
+       proc cmd @{@} @{
+          global X
+          set X 1
+       @}
+       set X 0
+       focus .b
+       tkwait visibility .b")
+    (while (tcl-do-one-event (tcl-events all idle))
+      (when (tcl-obj->boolean (tcl-interp-eval interp "set X"))
+        (break)))))
+@end lisp
 
 @c page
 @ignore
