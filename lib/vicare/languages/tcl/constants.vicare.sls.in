@@ -24,7 +24,7 @@
 ;;;
 
 
-(library (vicare languages tcl constants)
+(library (vicare languages tcl constants (0 4 2015 7 15))
   (export
     TCL_WINDOW_EVENTS
     TCL_FILE_EVENTS

@@ -26,7 +26,7 @@
 
 
 #!r6rs
-(library (vicare languages tcl unsafe-capi)
+(library (vicare languages tcl unsafe-capi (0 4 2015 7 15))
   (export
 
     ;; version functions

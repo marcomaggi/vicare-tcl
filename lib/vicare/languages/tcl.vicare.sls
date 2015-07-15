@@ -26,7 +26,7 @@
 
 
 #!vicare
-(library (vicare languages tcl)
+(library (vicare languages tcl (0 4 2015 7 15))
   (foreign-library "vicare-tcl")
   (export
 
