@@ -41,6 +41,12 @@
     tcl-release-serial
     tcl-patch-level
 
+    ;; condition object types
+    &tcl-conversion
+    make-tcl-conversion-error
+    tcl-conversion-error?
+    tcl-conversion-error.value
+
     ;; tcl obj
     tcl-obj-finalise
     tcl-obj?
@@ -49,6 +55,8 @@
     tcl-obj-putprop			tcl-obj-getprop
     tcl-obj-remprop			tcl-obj-property-list
     tcl-obj-hash
+
+    tcl-obj=?
 
     tcl-obj->utf8
     string->tcl-obj			tcl-obj->string
@@ -95,6 +103,22 @@
 
 ;;;; arguments validation
 
+
+
+;;;; condition object types
+
+(define-condition-type &tcl-conversion
+    &error
+  make-tcl-conversion-error
+  tcl-conversion-error?
+  (value	tcl-conversion-error.value))
+
+(define (raise-tcl-conversion-error who message value . irritants)
+  (raise
+   (condition (make-tcl-conversion-error value)
+	      (make-who-condition who)
+	      (make-message-condition message)
+	      (make-irritants-condition irritants))))
 
 
 ;;;; version functions
@@ -156,6 +180,12 @@
 (define-list-of-type-predicate list-of-tcl-objs?/alive tcl-obj?/alive)
 
 ;;; --------------------------------------------------------------------
+
+(define* (tcl-obj=? {obj1 tcl-obj?/alive} {obj2 tcl-obj?/alive})
+  (string=? (tcl-obj->string obj1)
+	    (tcl-obj->string obj2)))
+
+;;; --------------------------------------------------------------------
 ;;; string objects
 
 (define* (tcl-obj->utf8 {tclobj tcl-obj?/alive})
@@ -172,7 +202,8 @@
 	    => (lambda (rv)
 		 (make-tcl-obj/owner rv)))
 	   (else
-	    (error __who__ "unable to create Tcl string object" str str.len))))))
+	    (raise-tcl-conversion-error __who__
+	      "unable to create Tcl string object" str str.len))))))
 
 (define* (tcl-obj->string {tclobj tcl-obj?/alive})
   (utf8->string (capi.tcl-obj-string-to-bytevector-string tclobj)))
@@ -185,13 +216,15 @@
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
-	 (error __who__ "unable to create Tcl boolean object" bool))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create Tcl boolean object" bool))))
 
 (define* (tcl-obj->boolean {tclobj tcl-obj?/alive})
   (let ((rv (capi.tcl-obj-boolean-to-boolean tclobj)))
     (if (null? rv)
 	;;TCLOBJ does not represent a boolean.
-	(error __who__ "unable to create boolean representation of Tcl_Obj" tclobj)
+	(raise-tcl-conversion-error __who__
+	  "unable to create boolean representation of Tcl_Obj" tclobj)
       rv)))
 
 ;;; --------------------------------------------------------------------
@@ -202,12 +235,14 @@
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
-	 (error __who__ "unable to create Tcl \"signed int\" object" obj))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create Tcl \"signed int\" object" obj))))
 
 (define* (tcl-obj->integer {tclobj tcl-obj?/alive})
   (or (capi.tcl-obj-int-to-integer tclobj)
       ;;TCLOBJ does not represent a integer.
-      (error __who__ "unable to create \"signed int\" representation of Tcl_Obj" tclobj)))
+      (raise-tcl-conversion-error __who__
+	"unable to create \"signed int\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; long objects
@@ -217,12 +252,14 @@
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
-	 (error __who__ "unable to create Tcl \"singed long\" object" obj))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create Tcl \"singed long\" object" obj))))
 
 (define* (tcl-obj->long {tclobj tcl-obj?/alive})
   (or (capi.tcl-obj-long-to-integer tclobj)
       ;;TCLOBJ does not represent a long.
-      (error __who__ "unable to create \"signed long\" representation of Tcl_Obj" tclobj)))
+      (raise-tcl-conversion-error __who__
+	"unable to create \"signed long\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; wide objects
@@ -232,12 +269,14 @@
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
-	 (error __who__ "unable to create Tcl \"Tcl_WideInt\" object" obj))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create Tcl \"Tcl_WideInt\" object" obj))))
 
 (define* (tcl-obj->wide-int {tclobj tcl-obj?/alive})
   (or (capi.tcl-obj-wide-int-to-integer tclobj)
       ;;TCLOBJ does not represent a wide int.
-      (error __who__ "unable to create \"Tcl_WideInt\" representation of Tcl_Obj" tclobj)))
+      (raise-tcl-conversion-error __who__
+	"unable to create \"Tcl_WideInt\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; double objects
@@ -247,12 +286,14 @@
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
-	 (error __who__ "unable to create Tcl \"double\" object" obj))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create Tcl \"double\" object" obj))))
 
 (define* (tcl-obj->flonum {tclobj tcl-obj?/alive})
   (or (capi.tcl-obj-double-to-flonum tclobj)
       ;;TCLOBJ does not represent a flonum.
-      (error __who__ "unable to create \"double\" representation of Tcl_Obj" tclobj)))
+      (raise-tcl-conversion-error __who__
+	"unable to create \"double\" representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; bytearray objects
@@ -262,12 +303,14 @@
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
-	 (error __who__ "unable to create Tcl byte array object" obj))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create Tcl byte array object" obj))))
 
 (define* (tcl-obj->bytevector {tclobj tcl-obj?/alive})
   (or (capi.tcl-obj-bytearray-to-bytevector tclobj)
       ;;TCLOBJ does not represent a byte array.
-      (error __who__ "unable to create byte array representation of Tcl_Obj" tclobj)))
+      (raise-tcl-conversion-error __who__
+	"unable to create byte array representation of Tcl_Obj" tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; list objects
@@ -277,7 +320,8 @@
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
-	 (error __who__ "unable to create Tcl list object" obj))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create Tcl list object" obj))))
 
 (define* (tcl-obj->list {tclobj tcl-obj?/alive})
   (cond ((capi.tcl-obj-list-to-list tclobj)
@@ -288,7 +332,8 @@
 		rv)))
 	(else
 	 ;;TCLOBJ does not represent a list.
-	 (error __who__ "unable to create list representation of Tcl_Obj" tclobj))))
+	 (raise-tcl-conversion-error __who__
+	   "unable to create list representation of Tcl_Obj" tclobj))))
 
 
 ;;;; data structures: tcl-interp
@@ -374,5 +419,6 @@
 
 ;;; end of file
 ;; Local Variables:
-;; eval: (put 'ffi.define-foreign-pointer-wrapper 'scheme-indent-function 1)
+;; eval: (put 'ffi.define-foreign-pointer-wrapper	'scheme-indent-function 1)
+;; eval: (put 'raise-tcl-conversion-error		'scheme-indent-function 1)
 ;; End:

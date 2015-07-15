@@ -43,6 +43,32 @@
        (fprintf (stderr) "final destruction ~s\n" struct)))))
 
 
+;;;; helper
+
+(define-syntax check-for-tcl-conversion
+  (syntax-rules (=>)
+    ((_ ?form => ?expected)
+     (check
+	 (try
+	     ?form
+	   (catch E
+	     ((&tcl-conversion)
+	      (tcl-conversion-error.value E))
+	     (else E)))
+       => ?expected))
+    ((_ ?form (=> ?equal) ?expected)
+     (check
+	 (try
+	     ?form
+	   (catch E
+	     ((&tcl-conversion)
+	      (tcl-conversion-error.value E))
+	     (else E)))
+       (=> ?equal)
+       ?expected))
+    ))
+
+
 ;;;; helpers
 
 
@@ -297,6 +323,11 @@
   (check		(tcl-obj->string (boolean->tcl-obj #t))		=> "1")
   (check		(tcl-obj->string (boolean->tcl-obj #f))		=> "0")
 
+  (check-for-tcl-conversion
+      (tcl-obj->boolean (string->tcl-obj "ciao"))
+    (=> tcl-obj=?)
+    (string->tcl-obj "ciao"))
+
 ;;; --------------------------------------------------------------------
 ;;; integers
 
@@ -308,6 +339,11 @@
   (check
       (tcl-obj->integer (integer->tcl-obj (words.greatest-c-signed-int)))
     => (words.greatest-c-signed-int))
+
+  (check-for-tcl-conversion
+      (tcl-obj->integer (string->tcl-obj "ciao"))
+    (=> tcl-obj=?)
+    (string->tcl-obj "ciao"))
 
 ;;; --------------------------------------------------------------------
 ;;; longs
@@ -321,6 +357,11 @@
       (tcl-obj->long (long->tcl-obj (words.greatest-c-signed-long)))
     => (words.greatest-c-signed-long))
 
+  (check-for-tcl-conversion
+      (tcl-obj->long (string->tcl-obj "ciao"))
+    (=> tcl-obj=?)
+    (string->tcl-obj "ciao"))
+
 ;;; --------------------------------------------------------------------
 ;;; wide ints
 
@@ -333,6 +374,11 @@
       (tcl-obj->wide-int (wide-int->tcl-obj (words.greatest-s64)))
     => (words.greatest-s64))
 
+  (check-for-tcl-conversion
+      (tcl-obj->wide-int (string->tcl-obj "ciao"))
+    (=> tcl-obj=?)
+    (string->tcl-obj "ciao"))
+
 ;;; --------------------------------------------------------------------
 ;;; doubles
 
@@ -344,6 +390,11 @@
   (check
       (tcl-obj->flonum (flonum->tcl-obj -123.456e-7))
     => -123.456e-7)
+
+  (check-for-tcl-conversion
+      (tcl-obj->flonum (string->tcl-obj "ciao"))
+    (=> tcl-obj=?)
+    (string->tcl-obj "ciao"))
 
 ;;; --------------------------------------------------------------------
 ;;; bytearrays
@@ -413,3 +464,6 @@
 (check-report)
 
 ;;; end of file
+;; Local Variables:
+;; eval: (put 'check-for-tcl-conversion 'scheme-indent-function 1)
+;; End:

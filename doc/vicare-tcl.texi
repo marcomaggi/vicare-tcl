@@ -256,6 +256,7 @@ for @value{FOREIGN_PACKAGE}.
 
 @menu
 * plain version::               @value{PACKAGE} version informations.
+* plain conditions::            Condition object types.
 * plain obj::                   @tcl{} objects.
 * plain interp::                @tcl{} interpreter objects.
 * plain misc::                  Miscellaneous operations.
@@ -308,6 +309,40 @@ defined in the header file @file{tcl.h}.
 Return a Scheme string representing the @tcl{} version number.  This
 number is the value of the C language preprocessor symbol
 @code{TCL_PATCH_LEVEL} defined in the header file @file{tcl.h}.
+@end defun
+
+@c page
+@node plain conditions
+@section Condition object types
+
+
+@deftp {Condition Object Type} &tcl-conversion
+Used to signal a conversion error between a @tcl{} object and a Scheme
+object; it is derived from @condition{error}.  It has the following
+fields:
+
+@table @code
+@item value
+The offending value.
+@end table
+@end deftp
+
+
+@defun make-tcl-conversion-error @var{value}
+Build and return a new condition object of type
+@condition{tcl-conversion}.
+@end defun
+
+
+@defun tcl-conversion-error? @var{obj}
+Return @true{} if @var{obj} is a condition object of type
+@condition{tcl-conversion}; otherwise return @false{}.
+@end defun
+
+
+@defun tcl-conversion-error.value @var{cnd}
+Accessor for the field of condition objects of type
+@condition{tcl-conversion}.
 @end defun
 
 @c page
@@ -456,10 +491,21 @@ evaluated in @var{tclobj}; to apply this function is equivalent to
 invoking @tclcode{obj delete} upon the objreter.
 @end defun
 
+
+@defun tcl-obj=? @vari{tclobj} @varii{tclobj}
+Compare the string representation of the @objtype{tcl-obj} instances
+@vari{tclobj} and @varii{tclobj} using the standard @func{string=?}.
+@end defun
+
 @c page
 @node plain obj conversion
 @subsection Converting @tcl{} objects
 
+
+If an error occurs while conversion @tcl{} objects to and from Scheme
+objects: the following functions raise a non--continuable exception with
+compound condition object of types: @condition{tcl-conversion},
+@condition{who}, @condition{message}.
 
 The following bindings are exported by the library
 @value{FOREIGN_SCHEME_LIB}.
