@@ -955,6 +955,7 @@ The manual pages of the @tcl{} commands: @manpage{update,
 
 @item
 The manual pages of the C language @tcl{} functions:
+@manpage{Tcl_CreateEventSource, Tcl_CreateEventSource},
 @manpage{Tcl_DoOneEvent, Tcl_DoOneEvent}, @manpage{Tcl_DoWhenIdle,
 Tcl_DoWhenIdle}.
 @end itemize
