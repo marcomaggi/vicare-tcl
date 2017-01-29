@@ -61,23 +61,6 @@ dist_lib_vicare_languages_tcl_features_vicare_sls_DATA = lib/vicare/languages/tc
 endif
 CLEANFILES += lib/vicare/languages/tcl/features.fasl
 
-lib/nausicaa/languages/tcl.fasl: \
-		lib/nausicaa/languages/tcl.vicare.sls \
-		lib/vicare/languages/tcl.fasl \
-		$(FASL_PREREQUISITES)
-	$(VICARE_COMPILE_RUN) --output $@ --compile-library $<
-
-if WANT_NAUSICAA
-lib_nausicaa_languages_tcl_fasldir = $(bundledlibsdir)/nausicaa/languages
-lib_nausicaa_languages_tcl_vicare_slsdir  = $(bundledlibsdir)/nausicaa/languages
-nodist_lib_nausicaa_languages_tcl_fasl_DATA = lib/nausicaa/languages/tcl.fasl
-if WANT_INSTALL_SOURCES
-dist_lib_nausicaa_languages_tcl_vicare_sls_DATA = lib/nausicaa/languages/tcl.vicare.sls
-endif
-EXTRA_DIST += lib/nausicaa/languages/tcl.vicare.sls
-CLEANFILES += lib/nausicaa/languages/tcl.fasl
-endif
-
 
 ### end of file
 # Local Variables:

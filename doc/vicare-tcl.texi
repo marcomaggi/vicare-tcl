@@ -33,7 +33,7 @@
 
 @c To be used as @value{COPYRIGHT_YEARS} whenever we need to include the
 @c list of copyright years.
-@set COPYRIGHT_YEARS            2015
+@set COPYRIGHT_YEARS            2015, 2017
 
 @c ------------------------------------------------------------
 
@@ -41,7 +41,6 @@
 @set FOREIGN_VERSION            8.6.4
 @set FOREIGN_URL                @url{http:/@//@/www.tcl.tk/}
 @set FOREIGN_SCHEME_LIB         @library{vicare languages tcl}
-@set NAUSICAA_SCHEME_LIB        @library{nausicaa languages tcl}
 @set GITHUB_URL                 @url{http:/@//@/github.com/@/marcomaggi/@/@value{PACKAGE_NICKNAME}}
 @set BITBUCKET_URL              @url{https:/@//@/bitbucket.org/@/marcomaggi/@/@value{PACKAGE_NICKNAME}}
 @set DOWNLOAD_URL               @url{https:/@//@/bitbucket.org/@/marcomaggi/@/@value{PACKAGE_NICKNAME}/@/downloads}
@@ -154,7 +153,6 @@ entitled ``@gnu{} Free Documentation License''.
 @menu
 * overview::                    Overview of the package.
 * plain::                       Plain programming interface.
-@c * nau::                         Nausicaa programming interface.
 
 Appendices
 
@@ -227,12 +225,6 @@ language header @file{tcl.h}.
 It exports one identifier syntax binding for each @code{HAVE_} constant
 defined by the @command{configure} script, expanding to @true{} or
 @false{}.
-
-@item @library{nausicaa languages tcl}
-@cindex Library @library{nausicaa languages tcl}
-@cindex @library{nausicaa languages tcl}, library
-An @oopp{} @api{} built on top of the @library{nausicaa} language and
-the library @library{vicare languages tcl}.
 @end table
 
 Scheme libraries are installed under the directory:
@@ -1042,173 +1034,6 @@ in it then enters the events loop until the button is pressed.
       (when (tcl-obj->boolean (tcl-interp-eval interp "set X"))
         (break)))))
 @end lisp
-
-@c page
-@ignore
-
-@node nau
-@chapter Nausicaa programming interface
-
-
-@cindex Library @value{NAUSICAA_SCHEME_LIB}
-@cindex @value{NAUSICAA_SCHEME_LIB}, library
-
-
-The library @value{NAUSICAA_SCHEME_LIB} implements an interface to
-@value{FOREIGN_SCHEME_LIB} on top of the @library{nausicaa} language.
-
-@menu
-* nau intro::                   Introduction to the Nausicaa @api{}.
-* nau alpha::                   Alpha objects handling.
-@end menu
-
-@c page
-@node nau intro
-@section Introduction to the Nausicaa @api{}
-
-
-The library @value{NAUSICAA_SCHEME_LIB} reexports the following bindings
-from @value{FOREIGN_SCHEME_LIB}:
-
-@example
-vicare-tcl-version-interface-current
-vicare-tcl-version-interface-revision
-vicare-tcl-version-interface-age
-vicare-tcl-version
-@end example
-
-@c page
-@node nau alpha
-@section Alpha objects handling
-
-
-@menu
-* nau alpha objects::           Alpha objects.
-* nau alpha methods::           Alpha methods.
-@end menu
-
-@c page
-@node nau alpha objects
-@subsection Alpha objects
-
-
-The following bindings are exported by the library
-@value{NAUSICAA_SCHEME_LIB}.
-
-
-@deftp {Label Type} @aclass{tcl-alpha}
-@cindex Argument @var{alpha}
-@cindex @var{alpha} argument
-Label type representing objects of type @objtype{tcl-alpha}.  When
-instances of this type are used as arguments to functions: this
-documentation identifies them as @var{alpha}.
-
-Instances of this type must be finalised calling the method
-@func{finalise}; whenever an instance of this type is garbage collected:
-@func{finalise} is automatically applied to it and any error ignored.
-@end deftp
-
-
-@defop {Default constructor} @aclass{tcl-alpha} constructor
-Build and return a new @class{tcl-alpha} object; if an error occurs
-raise an exception.
-@end defop
-
-
-@defop {Maker syntax} @aclass{tcl-alpha} @aclass{tcl-alpha} ()
-Build and return a new @class{tcl-alpha} using the default
-constructor.
-@end defop
-
-
-@defmethod @aclass{tcl-alpha} finalise
-Finalise the instance; return unspecified values.  It is fine to call
-this method multiple times for the same instance.
-@end defmethod
-
-
-@deftypemethod @aclass{tcl-alpha} @aclass{boolean} alive?
-Return @true{} if @var{obj} is an instance of @class{tcl-alpha} and it
-has not been finalised; return @false{} otherwise.
-@end deftypemethod
-
-
-@c ------------------------------------------------------------
-
-@subsubheading Object properties
-
-
-@defmethod @aclass{tcl-alpha} putprop @var{key} @var{value}
-Add a new property @var{key} to the property list of the instance;
-@var{key} must be a symbol.  If @var{key} is already set: the old entry
-is mutated to reference the new @var{value}.
-@end defmethod
-
-
-@defmethod @aclass{tcl-alpha} getprop @var{key}
-Return the value of the property @var{key} in the property list of the
-instance; if @var{key} is not set: return @false{}.  @var{key} must be a
-symbol.
-@end defmethod
-
-
-@defmethod @aclass{tcl-alpha} remprop @var{key}
-Remove the property @var{key} from the property list of the instance; if
-@var{key} is not set: nothing happens.  @var{key} must be a symbol.
-@end defmethod
-
-
-@defmethod @aclass{tcl-alpha} property-list
-Return a new association list representing the property list of the
-instance.  The order of the entries is the same as the property creation
-order.
-@end defmethod
-
-@c ------------------------------------------------------------
-
-@subsubheading Virtual fields
-
-
-@deftypecv {Mutable virtual field} @aclass{tcl-alpha} @aclass{procedure} destructor
-Retrieve or set a destructor function associated to the instance.
-
-Whenever the instance is finalised, either explicitly with
-@func{finalise} or implicitly by the garbage collector, the custom
-destructor is applied to the instance before the internal state of the
-instance is destroyed.
-@end deftypecv
-
-@c ------------------------------------------------------------
-
-@subsubheading Other operations
-
-
-@defmethod @aclass{tcl-alpha} hash
-Return an exact integer to be used as hashtable key for the instance.
-Hashtables having a @class{tcl-alpha} as key can be instantiated as
-follows:
-
-@example
-(make-hashtable (lambda ((V <tcl-alpha>))
-                  (V hash))
-                eq?)
-@end example
-@end defmethod
-
-@c page
-@node nau alpha methods
-@subsection Alpha methods
-
-
-The following bindings are exported by the library
-@value{NAUSICAA_SCHEME_LIB}.
-
-
-@c @defmethod @aclass{tcl-alpha} name
-@c Return a Scheme string representing the name of the given instance.
-@c @end defmethod
-
-@end ignore
 
 @c page
 @c ------------------------------------------------------------

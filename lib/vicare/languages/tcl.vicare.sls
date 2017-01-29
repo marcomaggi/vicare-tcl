@@ -8,7 +8,7 @@
 ;;;
 ;;;
 ;;;
-;;;Copyright (C) 2015 Marco Maggi <marco.maggi-ipsu@poste.it>
+;;;Copyright (C) 2015, 2017 Marco Maggi <marco.maggi-ipsu@poste.it>
 ;;;
 ;;;This program is free software:  you can redistribute it and/or modify
 ;;;it under the terms of the  GNU General Public License as published by
@@ -27,6 +27,7 @@
 
 #!vicare
 (library (vicare languages tcl (0 4 2015 7 15))
+  (options typed-language)
   (foreign-library "vicare-tcl")
   (export
 
@@ -91,19 +92,18 @@
     tcl-events
     tcl-do-one-event
     )
-  (import (vicare (or (0 4 2015 5 (>= 26))
-		      (0 4 2015 (>= 6))
-		      (0 4 (>= 2016))))
+  (import (vicare (0 4 2017 1 (>= 10)))
+    (prefix (vicare system structs) structs::)
     (vicare languages tcl constants)
-    (prefix (vicare languages tcl unsafe-capi) capi.)
+    (prefix (vicare languages tcl unsafe-capi) capi::)
     #;(prefix (vicare ffi (or (0 4 2015 5 (>= 27))
 			    (0 4 2015 (>= 6))
 			    (0 4 (>= 2016))))
-	    ffi.)
-    (prefix (vicare ffi foreign-pointer-wrapper) ffi.)
+	    ffi::)
+    (prefix (vicare ffi foreign-pointer-wrapper) ffi::)
     (vicare arguments general-c-buffers)
     (vicare language-extensions c-enumerations)
-    (prefix (vicare platform words) words.)
+    (prefix (vicare platform words) words::)
     (only (vicare language-extensions syntaxes)
 	  define-list-of-type-predicate))
 
@@ -147,40 +147,40 @@
 ;;;; version functions
 
 (define (vicare-tcl-version-interface-current)
-  (capi.vicare-tcl-version-interface-current))
+  (capi::vicare-tcl-version-interface-current))
 
 (define (vicare-tcl-version-interface-revision)
-  (capi.vicare-tcl-version-interface-revision))
+  (capi::vicare-tcl-version-interface-revision))
 
 (define (vicare-tcl-version-interface-age)
-  (capi.vicare-tcl-version-interface-age))
+  (capi::vicare-tcl-version-interface-age))
 
 (define (vicare-tcl-version)
-  (ascii->string (capi.vicare-tcl-version)))
+  (ascii->string (capi::vicare-tcl-version)))
 
 ;;; --------------------------------------------------------------------
 
 (define (tcl-major-version)
-  (capi.tcl-major-version))
+  (capi::tcl-major-version))
 
 (define (tcl-minor-version)
-  (capi.tcl-minor-version))
+  (capi::tcl-minor-version))
 
 (define (tcl-release-serial)
-  (capi.tcl-release-serial))
+  (capi::tcl-release-serial))
 
 (define (tcl-patch-level)
-  (ascii->string (capi.tcl-patch-level)))
+  (ascii->string (capi::tcl-patch-level)))
 
 
 ;;;; data structures: tcl-obj
 
-(ffi.define-foreign-pointer-wrapper tcl-obj
-  (ffi.foreign-destructor capi.tcl-obj-finalise)
-  (ffi.collector-struct-type #f))
+(ffi::define-foreign-pointer-wrapper tcl-obj
+  (ffi::foreign-destructor capi::tcl-obj-finalise)
+  (ffi::collector-struct-type #f))
 
 (module ()
-  (set-rtd-printer! (type-descriptor tcl-obj)
+  (structs::set-struct-type-printer! (type-descriptor tcl-obj)
     (lambda (S port sub-printer)
       (define-syntax-rule (%display thing)
 	(display thing port))
@@ -189,7 +189,7 @@
       (%display "#[tcl-obj")
       (%display " pointer=")	(%display ($tcl-obj-pointer  S))
       (when ($tcl-obj-pointer S)
-	(let ((bv (capi.tcl-obj-string-to-bytevector-string S)))
+	(let ((bv (capi::tcl-obj-string-to-bytevector-string S)))
 	  (if (bytevector-empty? bv)
 	      (%display " string-rep=\"\"")
 	    (begin
@@ -212,7 +212,7 @@
 ;;; string objects
 
 (define* (tcl-obj->utf8 {tclobj tcl-obj?/alive})
-  (capi.tcl-obj-string-to-bytevector-string tclobj))
+  (capi::tcl-obj-string-to-bytevector-string tclobj))
 
 (case-define* string->tcl-obj
   ((str)
@@ -221,7 +221,7 @@
    (assert-general-c-string-and-length __who__ str str.len)
    (with-general-c-strings
        ((str^	str))
-     (cond ((capi.tcl-obj-string-pointer-from-general-string str^ str.len)
+     (cond ((capi::tcl-obj-string-pointer-from-general-string str^ str.len)
 	    => (lambda (rv)
 		 (make-tcl-obj/owner rv)))
 	   (else
@@ -229,13 +229,13 @@
 	      "unable to create Tcl string object" str str.len))))))
 
 (define* (tcl-obj->string {tclobj tcl-obj?/alive})
-  (utf8->string (capi.tcl-obj-string-to-bytevector-string tclobj)))
+  (utf8->string (capi::tcl-obj-string-to-bytevector-string tclobj)))
 
 ;;; --------------------------------------------------------------------
 ;;; boolean objects
 
 (define* (boolean->tcl-obj bool)
-  (cond ((capi.tcl-obj-boolean-pointer-from-boolean bool)
+  (cond ((capi::tcl-obj-boolean-pointer-from-boolean bool)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -243,7 +243,7 @@
 	   "unable to create Tcl boolean object" bool))))
 
 (define* (tcl-obj->boolean {tclobj tcl-obj?/alive})
-  (let ((rv (capi.tcl-obj-boolean-to-boolean tclobj)))
+  (let ((rv (capi::tcl-obj-boolean-to-boolean tclobj)))
     (if (null? rv)
 	;;TCLOBJ does not represent a boolean.
 	(raise-tcl-conversion-error __who__
@@ -253,8 +253,8 @@
 ;;; --------------------------------------------------------------------
 ;;; integer objects
 
-(define* (integer->tcl-obj {obj words.signed-int?})
-  (cond ((capi.tcl-obj-int-pointer-from-integer obj)
+(define* (integer->tcl-obj {obj words::signed-int?})
+  (cond ((capi::tcl-obj-int-pointer-from-integer obj)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -262,7 +262,7 @@
 	   "unable to create Tcl \"signed int\" object" obj))))
 
 (define* (tcl-obj->integer {tclobj tcl-obj?/alive})
-  (or (capi.tcl-obj-int-to-integer tclobj)
+  (or (capi::tcl-obj-int-to-integer tclobj)
       ;;TCLOBJ does not represent a integer.
       (raise-tcl-conversion-error __who__
 	"unable to create \"signed int\" representation of Tcl_Obj" tclobj)))
@@ -270,8 +270,8 @@
 ;;; --------------------------------------------------------------------
 ;;; long objects
 
-(define* (long->tcl-obj {obj words.signed-long?})
-  (cond ((capi.tcl-obj-long-pointer-from-integer obj)
+(define* (long->tcl-obj {obj words::signed-long?})
+  (cond ((capi::tcl-obj-long-pointer-from-integer obj)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -279,7 +279,7 @@
 	   "unable to create Tcl \"singed long\" object" obj))))
 
 (define* (tcl-obj->long {tclobj tcl-obj?/alive})
-  (or (capi.tcl-obj-long-to-integer tclobj)
+  (or (capi::tcl-obj-long-to-integer tclobj)
       ;;TCLOBJ does not represent a long.
       (raise-tcl-conversion-error __who__
 	"unable to create \"signed long\" representation of Tcl_Obj" tclobj)))
@@ -287,8 +287,8 @@
 ;;; --------------------------------------------------------------------
 ;;; wide objects
 
-(define* (wide-int->tcl-obj {obj words.word-s64?})
-  (cond ((capi.tcl-obj-wide-int-pointer-from-integer obj)
+(define* (wide-int->tcl-obj {obj words::word-s64?})
+  (cond ((capi::tcl-obj-wide-int-pointer-from-integer obj)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -296,7 +296,7 @@
 	   "unable to create Tcl \"Tcl_WideInt\" object" obj))))
 
 (define* (tcl-obj->wide-int {tclobj tcl-obj?/alive})
-  (or (capi.tcl-obj-wide-int-to-integer tclobj)
+  (or (capi::tcl-obj-wide-int-to-integer tclobj)
       ;;TCLOBJ does not represent a wide int.
       (raise-tcl-conversion-error __who__
 	"unable to create \"Tcl_WideInt\" representation of Tcl_Obj" tclobj)))
@@ -305,7 +305,7 @@
 ;;; double objects
 
 (define* (flonum->tcl-obj {obj flonum?})
-  (cond ((capi.tcl-obj-double-pointer-from-flonum obj)
+  (cond ((capi::tcl-obj-double-pointer-from-flonum obj)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -313,7 +313,7 @@
 	   "unable to create Tcl \"double\" object" obj))))
 
 (define* (tcl-obj->flonum {tclobj tcl-obj?/alive})
-  (or (capi.tcl-obj-double-to-flonum tclobj)
+  (or (capi::tcl-obj-double-to-flonum tclobj)
       ;;TCLOBJ does not represent a flonum.
       (raise-tcl-conversion-error __who__
 	"unable to create \"double\" representation of Tcl_Obj" tclobj)))
@@ -322,7 +322,7 @@
 ;;; bytearray objects
 
 (define* (bytevector->tcl-obj {obj bytevector?})
-  (cond ((capi.tcl-obj-bytearray-pointer-from-bytevector obj)
+  (cond ((capi::tcl-obj-bytearray-pointer-from-bytevector obj)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -330,7 +330,7 @@
 	   "unable to create Tcl byte array object" obj))))
 
 (define* (tcl-obj->bytevector {tclobj tcl-obj?/alive})
-  (or (capi.tcl-obj-bytearray-to-bytevector tclobj)
+  (or (capi::tcl-obj-bytearray-to-bytevector tclobj)
       ;;TCLOBJ does not represent a byte array.
       (raise-tcl-conversion-error __who__
 	"unable to create byte array representation of Tcl_Obj" tclobj)))
@@ -339,7 +339,7 @@
 ;;; list objects
 
 (define* (list->tcl-obj {obj list-of-tcl-objs?/alive})
-  (cond ((capi.tcl-obj-list-pointer-from-list obj)
+  (cond ((capi::tcl-obj-list-pointer-from-list obj)
 	 => (lambda (rv)
 	      (make-tcl-obj/owner rv)))
 	(else
@@ -347,10 +347,10 @@
 	   "unable to create Tcl list object" obj))))
 
 (define* (tcl-obj->list {tclobj tcl-obj?/alive})
-  (cond ((capi.tcl-obj-list-to-list tclobj)
+  (cond ((capi::tcl-obj-list-to-list tclobj)
 	 => (lambda (rv)
 	      ;;RV is a list of pointers to "Tcl_Obj".
-	      (map (lambda (item)
+	      (map (lambda ({_ tcl-obj} item)
 		     (make-tcl-obj/owner item))
 		rv)))
 	(else
@@ -361,12 +361,12 @@
 
 ;;;; data structures: tcl-interp
 
-(ffi.define-foreign-pointer-wrapper tcl-interp
-  (ffi.foreign-destructor capi.tcl-interp-finalise)
-  (ffi.collector-struct-type #f))
+(ffi::define-foreign-pointer-wrapper tcl-interp
+  (ffi::foreign-destructor capi::tcl-interp-finalise)
+  (ffi::collector-struct-type #f))
 
 (module ()
-  (set-rtd-printer! (type-descriptor tcl-interp)
+  (structs::set-struct-type-printer! (type-descriptor tcl-interp)
     (lambda (S port sub-printer)
       (define-inline (%display thing)
 	(display thing port))
@@ -379,7 +379,7 @@
 ;;; --------------------------------------------------------------------
 
 (define* (tcl-interp-initialise)
-  (cond ((capi.tcl-interp-initialise)
+  (cond ((capi::tcl-interp-initialise)
 	 => (lambda (rv)
 	      (make-tcl-interp/owner rv)))
 	(else
@@ -399,7 +399,7 @@
    (assert-general-c-string-and-length __who__ script script.len)
    (with-general-c-strings
        ((script^	script))
-     (let ((rv (capi.tcl-interp-eval interp script^ script.len args)))
+     (let ((rv (capi::tcl-interp-eval interp script^ script.len args)))
        (cond ((pointer? rv)
 	      ;;Successful  evaluation  of  the  script.   RV is  a  pointer  to  the
 	      ;;resulting "Tcl_Obj" structure.
@@ -433,7 +433,7 @@
    window))
 
 (define (tcl-do-one-event flags)
-  (capi.tcl-do-one-event (tcl-events->value flags)))
+  (capi::tcl-do-one-event (tcl-events->value flags)))
 
 
 ;;;; done
@@ -444,7 +444,7 @@
 
 ;;; end of file
 ;; Local Variables:
-;; eval: (put 'ffi.define-foreign-pointer-wrapper	'scheme-indent-function 1)
+;; eval: (put 'ffi::define-foreign-pointer-wrapper	'scheme-indent-function 1)
 ;; eval: (put 'raise-tcl-conversion-error		'scheme-indent-function 1)
 ;; eval: (put 'raise-tcl-evaluation-error		'scheme-indent-function 1)
 ;; End:

@@ -8,7 +8,7 @@
 ;;;
 ;;;
 ;;;
-;;;Copyright (C) 2015 Marco Maggi <marco.maggi-ipsu@poste.it>
+;;;Copyright (C) 2015, 2017 Marco Maggi <marco.maggi-ipsu@poste.it>
 ;;;
 ;;;This program is free software:  you can redistribute it and/or modify
 ;;;it under the terms of the  GNU General Public License as published by
@@ -29,15 +29,15 @@
 (import (vicare)
   (vicare languages tcl)
   (vicare languages tcl constants)
-;;;  (prefix (vicare ffi) ffi.)
-  (prefix (vicare platform words) words.)
+  (prefix (vicare system structs) structs::)
+  (prefix (vicare platform words) words::)
   (vicare checks))
 
 (check-set-mode! 'report-failed)
 (check-display "*** testing Vicare Tcl bindings\n")
 
 (when #f
-  (struct-guardian-logger
+  (structs::struct-guardian-logger
    (lambda (struct exc action)
      (when (eq? action 'before-destruction)
        (fprintf (stderr) "final destruction ~s\n" struct)))))
@@ -109,7 +109,7 @@
 
 
 (parametrise ((check-test-name		'struct-obj)
-	      (struct-guardian-logger	#t))
+	      (structs::struct-guardian-logger	#t))
 
   (define who 'test)
 
@@ -206,7 +206,7 @@
 
 
 (parametrise ((check-test-name		'struct-interp)
-	      (struct-guardian-logger	#t))
+	      (structs::struct-guardian-logger	#t))
 
   (define who 'test)
 
@@ -334,11 +334,11 @@
   (check (tcl-obj->integer (integer->tcl-obj +123))	=> +123)
   (check (tcl-obj->integer (integer->tcl-obj -123))	=> -123)
   (check
-      (tcl-obj->integer (integer->tcl-obj (words.least-c-signed-int)))
-    => (words.least-c-signed-int))
+      (tcl-obj->integer (integer->tcl-obj (words::least-c-signed-int)))
+    => (words::least-c-signed-int))
   (check
-      (tcl-obj->integer (integer->tcl-obj (words.greatest-c-signed-int)))
-    => (words.greatest-c-signed-int))
+      (tcl-obj->integer (integer->tcl-obj (words::greatest-c-signed-int)))
+    => (words::greatest-c-signed-int))
 
   (check-for-tcl-conversion
       (tcl-obj->integer (string->tcl-obj "ciao"))
@@ -351,11 +351,11 @@
   (check (tcl-obj->long (long->tcl-obj +123))	=> +123)
   (check (tcl-obj->long (long->tcl-obj -123))	=> -123)
   (check
-      (tcl-obj->long (long->tcl-obj (words.least-c-signed-long)))
-    => (words.least-c-signed-long))
+      (tcl-obj->long (long->tcl-obj (words::least-c-signed-long)))
+    => (words::least-c-signed-long))
   (check
-      (tcl-obj->long (long->tcl-obj (words.greatest-c-signed-long)))
-    => (words.greatest-c-signed-long))
+      (tcl-obj->long (long->tcl-obj (words::greatest-c-signed-long)))
+    => (words::greatest-c-signed-long))
 
   (check-for-tcl-conversion
       (tcl-obj->long (string->tcl-obj "ciao"))
@@ -368,11 +368,11 @@
   (check (tcl-obj->wide-int (wide-int->tcl-obj +123))	=> +123)
   (check (tcl-obj->wide-int (wide-int->tcl-obj -123))	=> -123)
   (check
-      (tcl-obj->wide-int (wide-int->tcl-obj (words.least-s64)))
-    => (words.least-s64))
+      (tcl-obj->wide-int (wide-int->tcl-obj (words::least-s64)))
+    => (words::least-s64))
   (check
-      (tcl-obj->wide-int (wide-int->tcl-obj (words.greatest-s64)))
-    => (words.greatest-s64))
+      (tcl-obj->wide-int (wide-int->tcl-obj (words::greatest-s64)))
+    => (words::greatest-s64))
 
   (check-for-tcl-conversion
       (tcl-obj->wide-int (string->tcl-obj "ciao"))

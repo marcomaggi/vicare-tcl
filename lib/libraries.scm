@@ -5,7 +5,7 @@
 
 (define-constant INCLUDE-LIBRARY-BUILD-HIERARCHIES
   '((vicare languages tcl)
-    (nausicaa languages tcl)))
+    ))
 
 (define-constant INCLUDE-LIBRARY-DEPENDENCIES-HIERARCHIES
   '())
@@ -45,8 +45,7 @@
      (vicare languages tcl unsafe-capi)
      (vicare languages tcl constants)
      (vicare languages tcl features))
-    ((WANT_NAUSICAA)
-     (nausicaa languages tcl))))
+    ))
 
 ;;; end of file
 ;; Local Variables:

@@ -1,4 +1,4 @@
-Subject: [announce] Vicare/Tcl revision 0.4d0
+Subject: [announce] Vicare/Tcl revision 0.4d1
 
 			       Vicare/Tcl
 			       ==========
@@ -33,12 +33,17 @@ tested Tcl version 8.6.4; the Tcl library is available at:
 			  <http://www.tcl.tk/>
 
 
+Notes for revision 0.4d1
+------------------------
+
+* Updated to support Vicare Scheme 0.4d1.
+
+
 Notes for revision 0.4d0
 ------------------------
 
 * The major and minor version numbers  of this package match the ones of
   the required Vicare Scheme package.
-
 
 
 ### end of file
